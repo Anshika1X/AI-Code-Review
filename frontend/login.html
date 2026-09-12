@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - AI Code Review</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body class="d-flex flex-column min-vh-100 justify-content-center align-items-center py-4">
+
+  <div class="container" style="max-width: 440px;">
+    <!-- Brand Logo -->
+    <div class="text-center mb-4">
+      <a href="index.html" class="brand-logo justify-content-center mb-2">
+        <div class="brand-logo-icon">AI</div>
+        <span>AI CODE REVIEW</span>
+      </a>
+      <p class="text-muted small">Sign in to review and analyze your code</p>
+    </div>
+
+    <!-- Login Card -->
+    <div class="card-clean p-4">
+      <h4 class="fw-bold mb-3 text-center">Welcome Back</h4>
+
+      <!-- Error Alert Box -->
+      <div id="errorAlert" class="alert alert-danger py-2 small d-none" role="alert"></div>
+
+      <form id="loginForm" novalidate>
+        <div class="mb-3">
+          <label for="email" class="form-label small fw-semibold text-muted">EMAIL ADDRESS</label>
+          <input type="email" class="form-control" id="email" placeholder="name@company.com" required autocomplete="email">
+          <div class="invalid-feedback small">Please provide a valid email.</div>
+        </div>
+
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label for="password" class="form-label small fw-semibold text-muted mb-0">PASSWORD</label>
+          </div>
+          <input type="password" class="form-control" id="password" placeholder="••••••••" required autocomplete="current-password">
+          <div class="invalid-feedback small">Password is required.</div>
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn-olive w-100 justify-content-center py-2 mt-2">
+          <span>Sign In</span>
+        </button>
+      </form>
+
+      <div class="text-center mt-4 pt-3 border-top">
+        <p class="small text-muted mb-0">Don't have an account? <a href="register.html" class="fw-bold" style="color: var(--primary-olive);">Sign up here</a></p>
+      </div>
+    </div>
+
+    <div class="text-center mt-3">
+      <a href="index.html" class="small text-muted text-decoration-none">← Back to home</a>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      Auth.requireGuest();
+
+      const form = document.getElementById('loginForm');
+      const errorAlert = document.getElementById('errorAlert');
+      const submitBtn = document.getElementById('submitBtn');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorAlert.classList.add('d-none');
+        errorAlert.textContent = '';
+
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!email || !password) {
+          errorAlert.textContent = 'Please fill in both email and password.';
+          errorAlert.classList.remove('d-none');
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Signing in...';
+
+        try {
+          const res = await apiClient.post('/api/login', { email, password });
+          if (res.success && res.token) {
+            Auth.saveAuth(res.token, res.user);
+            showToast('Login successful! Redirecting...', 'info');
+            setTimeout(() => {
+              window.location.href = 'dashboard.html';
+            }, 600);
+          } else {
+            throw new Error(res.error || 'Login failed');
+          }
+        } catch (err) {
+          errorAlert.textContent = err.message || 'Invalid email or password.';
+          errorAlert.classList.remove('d-none');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<span>Sign In</span>';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

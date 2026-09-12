@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Review - AI Code Review</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Loading Overlay with Multi-Step Progress -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-box">
+      <div class="spinner-border spinner-olive mb-3" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <div id="loadingStepTitle" class="loading-step">Analyzing Code...</div>
+      <div id="loadingStepSubtitle" class="loading-substep">Parsing abstract syntax tree and code structure</div>
+      <div class="progress mt-4" style="height: 6px;">
+        <div id="loadingProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 25%; background-color: var(--primary-olive);"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Topbar -->
+  <div class="mobile-topbar d-lg-none">
+    <a class="brand-logo" href="dashboard.html">
+      <div class="brand-logo-icon">AI</div>
+      <span>AI CODE REVIEW</span>
+    </a>
+    <button class="btn btn-sm btn-olive-outline" id="sidebarToggle">☰ Menu</button>
+  </div>
+
+  <div class="app-wrapper">
+    <!-- Sidebar Navigation -->
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <a class="brand-logo" href="dashboard.html">
+          <div class="brand-logo-icon">AI</div>
+          <span>AI CODE REVIEW</span>
+        </a>
+      </div>
+
+      <ul class="sidebar-menu">
+        <li class="sidebar-item">
+          <a href="dashboard.html" class="sidebar-link">
+            <span>📊</span>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="review.html" class="sidebar-link active">
+            <span>✨</span>
+            <span>New Review</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="history.html" class="sidebar-link">
+            <span>📜</span>
+            <span>Review History</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="settings.html" class="sidebar-link">
+            <span>⚙️</span>
+            <span>Settings</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="overflow-hidden">
+            <div class="fw-bold small user-name-display text-truncate">Developer</div>
+            <div class="text-muted small user-email-display text-truncate" style="font-size: 0.78rem;">user@example.com</div>
+          </div>
+          <button class="btn btn-sm btn-link p-0 text-muted btn-logout" title="Sign Out">🚪</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="app-main">
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+          <h2 class="fw-bold mb-1">AI Code Review Studio</h2>
+          <p class="text-muted small mb-0">Submit source code or import from GitHub to perform comprehensive static and AI analysis</p>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-sm btn-olive-outline" id="sampleCodeBtn">⚡ Load Sample Code</button>
+          <button type="button" class="btn btn-sm btn-olive-outline" id="githubModalBtn">🐙 GitHub Import</button>
+        </div>
+      </div>
+
+      <!-- Editor Card -->
+      <div class="card-clean mb-4 p-0" style="overflow: hidden;">
+        <div class="editor-header d-flex justify-content-between align-items-center px-3 py-2">
+          <div class="d-flex align-items-center gap-3">
+            <label for="languageSelect" class="small fw-bold text-muted mb-0">LANGUAGE:</label>
+            <select id="languageSelect" class="form-select form-select-sm" style="width: auto; min-width: 150px;">
+              <option value="Python" selected>Python</option>
+              <option value="JavaScript">JavaScript</option>
+              <option value="TypeScript">TypeScript</option>
+              <option value="Java">Java</option>
+              <option value="C">C</option>
+              <option value="C++">C++</option>
+              <option value="SQL">SQL</option>
+              <option value="HTML">HTML</option>
+              <option value="CSS">CSS</option>
+              <option value="Go">Go</option>
+              <option value="Rust">Rust</option>
+            </select>
+          </div>
+
+          <div class="small text-muted" id="editorStats">0 lines | 0 characters</div>
+        </div>
+
+        <div class="p-0">
+          <textarea
+            id="codeEditor"
+            class="code-editor-textarea"
+            placeholder="// Paste or write your source code here...&#10;// Example:&#10;def query_user(user_id):&#10;    sql = 'SELECT * FROM users WHERE id = ' + user_id&#10;    cursor.execute(sql)&#10;    return cursor.fetchall()"
+            spellcheck="false"
+          ></textarea>
+        </div>
+
+        <div class="p-3 bg-white border-top d-flex justify-content-between align-items-center">
+          <button type="button" class="btn btn-sm btn-outline-secondary" id="clearBtn">Clear Editor</button>
+          <button type="button" class="btn-olive" id="submitReviewBtn">
+            <span>Review Code</span>
+            <span>→</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- GitHub Import Modal -->
+      <div class="modal fade" id="githubModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title fw-bold">Analyze Public GitHub File</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p class="small text-muted mb-3">Fetch any public source file directly from GitHub without needing personal access tokens.</p>
+              <div class="mb-3">
+                <label for="githubRepoUrl" class="form-label small fw-semibold">REPOSITORY URL</label>
+                <input type="url" class="form-control form-control-sm" id="githubRepoUrl" placeholder="https://github.com/pallets/flask">
+              </div>
+              <div class="mb-3">
+                <label for="githubFilePath" class="form-label small fw-semibold">FILE PATH IN REPO</label>
+                <input type="text" class="form-control form-control-sm" id="githubFilePath" placeholder="src/flask/app.py">
+              </div>
+              <div class="mb-3">
+                <label for="githubBranch" class="form-label small fw-semibold">BRANCH (OPTIONAL)</label>
+                <input type="text" class="form-control form-control-sm" id="githubBranch" placeholder="main" value="main">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-sm btn-olive" id="fetchGithubBtn">Fetch & Review</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Bootstrap Bundle JS (includes Modal) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/review.js"></script>
+</body>
+</html>
