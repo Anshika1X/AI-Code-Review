@@ -31,7 +31,6 @@ MANDATORY SECURITY AUDIT CHECKLIST:
 Before determining the final findings, you MUST systematically analyze the code against each of these vectors:
 1. SQL & Data Storage Injections:
    - Check if SQL, NoSQL, or database queries are constructed using string concatenation (+), string interpolation, format strings (% or .format() or f-strings), or template literals (`...${{var}}...`) with untrusted or function parameter inputs.
-   - Treat unparameterized/concatenated SQL queries with parameters as HIGH or CRITICAL severity.
 2. Command & Process Injections:
    - Check if shell, OS commands, or process execution functions (e.g., exec, spawn, system, popen, subprocess) receive unsanitized input.
 3. Hardcoded Secrets & Credentials:
@@ -44,15 +43,26 @@ Before determining the final findings, you MUST systematically analyze the code 
    - Check if file system paths are constructed from untrusted input without canonicalization or directory traversal prevention (e.g. ../).
 7. Sensitive Data Exposure & Production Logging:
    - Check if sensitive data, internal tokens, or debug details are logged (e.g. console.log, print) or leaked in exceptions.
-8. Memory & Resource Safety / Performance:
+8. Insecure Database Queries & Data Handling:
+   - Check for unparameterized queries, improper transaction isolation, or unsafe batch data handling.
+9. Memory & Resource Safety / Performance:
    - Check for unbounded loops, unindexed queries, connection leaks, or redundant memory allocations.
-9. Bugs & Logical Flaws:
-   - Check for off-by-one errors, null/undefined dereferences, unhandled exceptions, or bare except blocks.
-10. Code Quality & Maintainability:
-   - Check adherence to language best practices, modularity, and clean code principles.
+10. Bugs & Logical Flaws:
+    - Check for off-by-one errors, null/undefined dereferences, unhandled exceptions, or bare except blocks.
+11. Code Quality & Maintainability:
+    - Check adherence to language best practices, modularity, clean code, and naming conventions.
 
-EVIDENCE & ATTRIBUTION RULES:
-- Clearly distinguish confirmed vulnerabilities from potential risks. If the context indicates a likely issue but exploitability depends on caller behavior, describe it as a "Potential" issue.
+SEVERITY CALIBRATION RULES:
+- Calibrate severity based on concrete evidence of exploitability:
+  * HIGH (Default for unconfirmed execution): Assign HIGH by default when code clearly constructs a SQL query using dynamic string concatenation (+), template literals, or format strings with parameters, but the actual database execution call/context (e.g. db.query(), cursor.execute()) is NOT visible in the provided snippet.
+  * CRITICAL: Use CRITICAL ONLY when the available code/context provides strong evidence of a severe, directly exploitable issue (e.g., untrusted user input directly passed to an active database execution call, remote OS command execution with user input, or exposed live database credentials).
+  * MEDIUM: Flaws that require specific preconditions, minor configuration issues, or performance bottlenecks with moderate impact.
+  * LOW: Informational findings, production logging practices (e.g., console.log / print in production code), or minor style inconsistencies.
+
+EVIDENCE, NAMING & ATTRIBUTION RULES:
+- Preserve the distinction between confirmed vulnerabilities and potential security risks:
+  * When exploitability cannot be confirmed from the local snippet alone, keep the wording as "Potential SQL Injection Vulnerability" or "Potential Security Risk".
+  * Reserve definitive titles like "SQL Injection Vulnerability" for cases where complete execution context and direct exploitability are verified.
 - ALWAYS identify the exact 1-indexed line_number where the issue originates.
 - Do NOT skip general code quality or logging findings while reporting security findings (e.g., if code has both a SQL injection and a console.log, report BOTH).
 - Categorize security issues strictly as "Security".
@@ -60,7 +70,7 @@ EVIDENCE & ATTRIBUTION RULES:
 SUGGESTED REFACTORING CODE RULES:
 - When an issue has a meaningful code fix, "suggested_code" MUST contain actual corrected code statements or functions, not merely explanatory comments or placeholders.
 - For SQL injection caused by string concatenation: provide a practical parameterized query or prepared statement appropriate to {language} (e.g. $1 with parameters array for JavaScript/pg, %s with parameter tuple for Python, or PreparedStatement for Java).
-- If the specific database library or driver is unknown from the snippet, provide a standard parameterized pattern and clearly label it as a contextual example without claiming it is guaranteed to execute without the driver.
+- If the specific database library or driver is unknown from the snippet, clearly label contextual examples as contextual/representative and do NOT pretend that the example is guaranteed to run without knowing the application's actual database library.
 - Preserve the developer's original function/variable naming where possible.
 
 RETURN FORMAT:
@@ -254,11 +264,12 @@ def analyze_code_with_gemini(code: str, language: str) -> dict:
 
 
 def _get_sql_suggested_code(language: str) -> str:
-    """Generate language-specific, practical parameterized query code."""
+    """Generate language-specific, practical parameterized query code with explicit contextual labeling."""
     lang = (language or '').lower()
     if any(k in lang for k in ('javascript', 'typescript', 'js', 'ts', 'node')):
         return (
             "// Contextual example: Parameterized query (e.g. pg / mysql2)\n"
+            "// Note: Exact query syntax and client execution depend on your database library.\n"
             "// Bind user parameters separately from SQL syntax to prevent injection:\n"
             "const query = \"SELECT * FROM users WHERE name = $1\";\n"
             "const params = [username];\n"
@@ -267,6 +278,7 @@ def _get_sql_suggested_code(language: str) -> str:
     elif 'python' in lang or 'py' in lang:
         return (
             "# Contextual example: Parameterized query (e.g. sqlite3 / psycopg2)\n"
+            "# Note: Placeholder syntax (%s vs ?) depends on your database connector/ORM.\n"
             "# Pass parameters as a separate tuple to allow the driver to escape safely:\n"
             "query = \"SELECT * FROM users WHERE name = %s\"\n"
             "cursor.execute(query, (username,))\n"
@@ -275,6 +287,7 @@ def _get_sql_suggested_code(language: str) -> str:
     elif 'java' in lang:
         return (
             "// Contextual example: Parameterized query using PreparedStatement\n"
+            "// Note: Implementation depends on your JDBC driver or datasource configuration.\n"
             "String sql = \"SELECT * FROM users WHERE name = ?\";\n"
             "try (PreparedStatement stmt = connection.prepareStatement(sql)) {\n"
             "    stmt.setString(1, username);\n"
@@ -284,6 +297,7 @@ def _get_sql_suggested_code(language: str) -> str:
     else:
         return (
             "-- Contextual example: Parameterized query placeholder\n"
+            "-- Note: Actual placeholder syntax depends on your database engine/driver.\n"
             "SELECT * FROM users WHERE name = ?;"
         )
 
@@ -420,19 +434,32 @@ def generate_static_analysis_fallback(code: str, language: str, error_msg: str =
         re.IGNORECASE
     )
 
+    # Detect if direct database execution call is visible (e.g. db.query, cursor.execute, conn.execute)
+    has_direct_db_exec = bool(re.search(
+        r'\b(?:db|cursor|connection|conn|client|session)\s*\.\s*(?:query|execute|raw|execute_query|run)\s*\(',
+        code, re.IGNORECASE
+    ))
+
     for idx, line in enumerate(lines, 1):
         # Check SQL Injection
         if sql_regex.search(line):
+            sql_severity = 'Critical' if has_direct_db_exec else 'High'
+            sql_message = 'SQL Injection Vulnerability' if has_direct_db_exec else 'Potential SQL Injection Vulnerability'
+            sql_explanation = (
+                'SQL query is constructed using direct string concatenation or interpolation with variable inputs and directly passed to database execution, creating an immediate, exploitable vulnerability.'
+                if has_direct_db_exec else
+                'SQL query appears to be constructed using direct string concatenation or interpolation with variable inputs. While active database execution context is not visible in this local snippet, passing this unparameterized query to a database driver presents a high risk of SQL injection.'
+            )
             issues.append({
                 'category': 'Security',
-                'severity': 'Critical',
+                'severity': sql_severity,
                 'line_number': idx,
-                'message': 'Potential SQL Injection Vulnerability',
-                'explanation': 'SQL query appears to be dynamically constructed using direct string concatenation or unparameterized interpolation. If user-controlled input reaches this query, an attacker could manipulate query syntax to read, modify, or destroy database records.',
+                'message': sql_message,
+                'explanation': sql_explanation,
                 'recommendation': 'Use parameterized queries, prepared statements, or ORM abstractions instead of direct string concatenation.',
                 'suggested_code': _get_sql_suggested_code(language)
             })
-            score -= 25
+            score -= 25 if sql_severity == 'Critical' else 20
 
         # Check Hardcoded Secrets
         if secret_regex.search(line):

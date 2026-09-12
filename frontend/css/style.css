@@ -48,6 +48,11 @@
   box-sizing: border-box;
 }
 
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
 body {
   font-family: var(--font-sans);
   color: var(--main-text);
@@ -177,6 +182,9 @@ a:hover {
 .app-wrapper {
   display: flex;
   min-height: 100vh;
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .app-sidebar {
@@ -251,6 +259,8 @@ a:hover {
   padding: 2rem 2.5rem;
   overflow-y: auto;
   max-width: 1440px;
+  min-width: 0;
+  width: 100%;
 }
 
 /* Mobile Header */
@@ -628,7 +638,18 @@ a:hover {
 /* ==========================================================================
    Responsive Adaptations
    ========================================================================== */
-@media (max-width: 992px) {
+pre {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+@media (max-width: 991.98px) {
   .app-sidebar {
     position: fixed;
     transform: translateX(-100%);
@@ -645,5 +666,38 @@ a:hover {
 
   .app-main {
     padding: 1.25rem 1rem;
+  }
+
+  .code-comparison-left {
+    border-right: none !important;
+    border-bottom: 1px solid var(--border-color) !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .stat-card {
+    padding: 0.95rem 1rem;
+  }
+
+  .stat-card .stat-value {
+    font-size: 1.45rem;
+  }
+
+  .score-badge-circle {
+    width: 82px;
+    height: 82px;
+  }
+
+  .score-badge-circle .score-num {
+    font-size: 1.65rem;
+  }
+
+  .filter-tabs {
+    gap: 0.25rem;
+  }
+
+  .filter-btn {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.65rem;
   }
 }

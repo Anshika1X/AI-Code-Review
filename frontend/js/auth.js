@@ -63,8 +63,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const sidebarToggleBtn = document.getElementById('sidebarToggle');
   const sidebar = document.querySelector('.app-sidebar');
   if (sidebarToggleBtn && sidebar) {
-    sidebarToggleBtn.addEventListener('click', () => {
+    sidebarToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       sidebar.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (sidebar.classList.contains('show') && !sidebar.contains(e.target) && e.target !== sidebarToggleBtn) {
+        sidebar.classList.remove('show');
+      }
     });
   }
 

@@ -162,3 +162,36 @@ def test_suggested_refactoring_practical_code():
     assert "cursor.execute" in py_sql_issue['suggested_code']
     assert "Contextual example" in py_sql_issue['suggested_code']
 
+
+def test_sql_injection_severity_calibration():
+    """
+    Verify severity calibration:
+    - HIGH by default when query is constructed without visible database execution call.
+    - CRITICAL when direct database execution is visible.
+    - Wording uses 'Potential SQL Injection Vulnerability' for unconfirmed execution.
+    """
+    # 1. Unconfirmed database execution: High severity + Potential wording
+    unconfirmed_snippet = """
+    function getUser(username) {
+        const query = "SELECT * FROM users WHERE name = '" + username + "'";
+        return query;
+    }
+    """
+    res_unconfirmed = generate_static_analysis_fallback(unconfirmed_snippet, 'JavaScript')
+    issue_unconfirmed = next(i for i in res_unconfirmed['issues'] if 'sql injection' in i['message'].lower())
+    assert issue_unconfirmed['severity'] == 'High'
+    assert 'potential' in issue_unconfirmed['message'].lower()
+
+    # 2. Confirmed database execution: Critical severity
+    confirmed_snippet = """
+    function getUser(username) {
+        const query = "SELECT * FROM users WHERE name = '" + username + "'";
+        return db.query(query);
+    }
+    """
+    res_confirmed = generate_static_analysis_fallback(confirmed_snippet, 'JavaScript')
+    issue_confirmed = next(i for i in res_confirmed['issues'] if 'sql injection' in i['message'].lower())
+    assert issue_confirmed['severity'] == 'Critical'
+    assert 'sql injection vulnerability' in issue_confirmed['message'].lower()
+
+
