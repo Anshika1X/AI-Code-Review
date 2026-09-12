@@ -195,3 +195,52 @@ def test_sql_injection_severity_calibration():
     assert 'sql injection vulnerability' in issue_confirmed['message'].lower()
 
 
+def test_command_injection_detection():
+    """
+    Verify detection of unsafe command execution / command injection when
+    user/variable input is passed into dangerous command APIs.
+    """
+    python_snippet = """import os
+
+def run_command(user_input):
+    os.system(user_input)
+"""
+    result = generate_static_analysis_fallback(python_snippet, 'Python')
+    issues = result['issues']
+
+    # 1. At least one finding is produced
+    assert len(issues) >= 1, "Expected at least 1 finding for command injection"
+
+    # 2. Finding relates to command injection and category is 'Security'
+    cmd_issues = [i for i in issues if 'command injection' in i['message'].lower()]
+    assert len(cmd_issues) >= 1, "Command injection issue was not detected"
+    cmd_issue = cmd_issues[0]
+    assert cmd_issue['category'] == 'Security'
+
+    # 3. Severity is reasonable (High or Critical)
+    assert cmd_issue['severity'] in ['High', 'Critical']
+
+    # 4. Correct line number (line 4)
+    assert cmd_issue['line_number'] == 4
+
+    # 5. Clear explanation and practical suggested code
+    assert 'arbitrary' in cmd_issue['explanation'].lower() or 'shell' in cmd_issue['explanation'].lower()
+    assert 'subprocess' in cmd_issue['recommendation'].lower()
+    assert cmd_issue['suggested_code'] is not None
+    assert 'subprocess.run' in cmd_issue['suggested_code']
+
+
+def test_command_injection_variants():
+    """Verify command injection detection across subprocess and Node.js child_process."""
+    # Subprocess with shell=True
+    py_code = "subprocess.run(user_input, shell=True)"
+    py_res = generate_static_analysis_fallback(py_code, 'Python')
+    assert any('command injection' in i['message'].lower() for i in py_res['issues'])
+
+    # Node.js child_process.exec
+    js_code = "child_process.exec(userInput);"
+    js_res = generate_static_analysis_fallback(js_code, 'JavaScript')
+    assert any('command injection' in i['message'].lower() for i in js_res['issues'])
+
+
+

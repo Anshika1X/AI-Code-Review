@@ -32,7 +32,18 @@ Before determining the final findings, you MUST systematically analyze the code 
 1. SQL & Data Storage Injections:
    - Check if SQL, NoSQL, or database queries are constructed using string concatenation (+), string interpolation, format strings (% or .format() or f-strings), or template literals (`...${{var}}...`) with untrusted or function parameter inputs.
 2. Command & Process Injections:
-   - Check if shell, OS commands, or process execution functions (e.g., exec, spawn, system, popen, subprocess) receive unsanitized input.
+   - Systematically inspect dangerous command-execution APIs across languages:
+     * Python: os.system(...), os.popen(...), subprocess.run(..., shell=True), subprocess.call(..., shell=True), subprocess.Popen(..., shell=True)
+     * JavaScript/Node.js: child_process.exec(...), child_process.execSync(...), exec(...)
+     * Java / C / C++: Runtime.getRuntime().exec(...), ProcessBuilder(...), system(...), popen(...)
+   - Flag any instance where a variable, parameter, concatenated string, or untrusted input is passed into a dangerous command execution API.
+   - Categorize strictly as "Security".
+   - Assign severity:
+     * HIGH by default when a variable or function parameter reaches a command execution API without an explicit hardcoded sanitized whitelist.
+     * CRITICAL when there is strong evidence of immediate, direct exploitability from external user input or remote web parameters.
+   - Title: "Potential Command Injection Vulnerability" (or "Command Injection Vulnerability" if directly exploitable).
+   - Explanation: Clearly explain that executing untrusted input through a shell allows an attacker to inject shell metacharacters (such as ;, |, &, or backticks) and execute arbitrary operating system commands with the privileges of the host process.
+   - Recommendation: Avoid shell execution. Use safe argument arrays with shell=False (e.g., subprocess.run(['tool', arg], check=True) in Python, or execFile in Node.js).
 3. Hardcoded Secrets & Credentials:
    - Check for hardcoded API keys, JWT secrets, passwords, private keys, database connection strings, or cloud tokens.
 4. Cross-Site Scripting (XSS) & Output Encoding:
@@ -54,15 +65,15 @@ Before determining the final findings, you MUST systematically analyze the code 
 
 SEVERITY CALIBRATION RULES:
 - Calibrate severity based on concrete evidence of exploitability:
-  * HIGH (Default for unconfirmed execution): Assign HIGH by default when code clearly constructs a SQL query using dynamic string concatenation (+), template literals, or format strings with parameters, but the actual database execution call/context (e.g. db.query(), cursor.execute()) is NOT visible in the provided snippet.
-  * CRITICAL: Use CRITICAL ONLY when the available code/context provides strong evidence of a severe, directly exploitable issue (e.g., untrusted user input directly passed to an active database execution call, remote OS command execution with user input, or exposed live database credentials).
+  * HIGH (Default for unconfirmed/function-scope execution): Assign HIGH by default when code constructs a SQL query using dynamic string concatenation (+), template literals, or format strings with parameters without visible database execution, OR when code passes a variable/parameter into a dangerous command-execution API (e.g. os.system(var), subprocess.call(var, shell=True), child_process.exec(var)) without a fixed whitelist.
+  * CRITICAL: Use CRITICAL ONLY when the available code/context provides strong evidence of a severe, directly exploitable issue (e.g., untrusted user input directly passed to an active database execution call, remote OS command execution with user-controlled input, or exposed live database credentials).
   * MEDIUM: Flaws that require specific preconditions, minor configuration issues, or performance bottlenecks with moderate impact.
   * LOW: Informational findings, production logging practices (e.g., console.log / print in production code), or minor style inconsistencies.
 
 EVIDENCE, NAMING & ATTRIBUTION RULES:
 - Preserve the distinction between confirmed vulnerabilities and potential security risks:
-  * When exploitability cannot be confirmed from the local snippet alone, keep the wording as "Potential SQL Injection Vulnerability" or "Potential Security Risk".
-  * Reserve definitive titles like "SQL Injection Vulnerability" for cases where complete execution context and direct exploitability are verified.
+  * When exploitability cannot be confirmed from the local snippet alone, keep the wording as "Potential SQL Injection Vulnerability", "Potential Command Injection Vulnerability", or "Potential Security Risk".
+  * Reserve definitive titles like "SQL Injection Vulnerability" or "Command Injection Vulnerability" for cases where complete execution context and direct exploitability are verified.
 - ALWAYS identify the exact 1-indexed line_number where the issue originates.
 - Do NOT skip general code quality or logging findings while reporting security findings (e.g., if code has both a SQL injection and a console.log, report BOTH).
 - Categorize security issues strictly as "Security".
@@ -70,6 +81,7 @@ EVIDENCE, NAMING & ATTRIBUTION RULES:
 SUGGESTED REFACTORING CODE RULES:
 - When an issue has a meaningful code fix, "suggested_code" MUST contain actual corrected code statements or functions, not merely explanatory comments or placeholders.
 - For SQL injection caused by string concatenation: provide a practical parameterized query or prepared statement appropriate to {language} (e.g. $1 with parameters array for JavaScript/pg, %s with parameter tuple for Python, or PreparedStatement for Java).
+- For command injection: provide a practical subprocess.run (Python) or execFile (JavaScript) example using an arguments list with shell execution disabled.
 - If the specific database library or driver is unknown from the snippet, clearly label contextual examples as contextual/representative and do NOT pretend that the example is guaranteed to run without knowing the application's actual database library.
 - Preserve the developer's original function/variable naming where possible.
 
@@ -340,18 +352,20 @@ def _get_cmd_suggested_code(language: str) -> str:
     lang = (language or '').lower()
     if any(k in lang for k in ('javascript', 'typescript', 'js', 'ts', 'node')):
         return (
+            "// Contextual example: Use execFile with an argument array rather than invoking a shell\n"
+            "// Note: Passing arguments as an array bypasses shell interpretation\n"
             "const { execFile } = require('child_process');\n"
-            "// Pass arguments as a sanitized array without invoking a shell\n"
-            "execFile('/usr/bin/tool', [sanitizedArg], (err, stdout) => {\n"
+            "execFile('/usr/bin/tool', [userInput], (err, stdout) => {\n"
             "    if (err) throw err;\n"
             "    console.log(stdout);\n"
             "});"
         )
     else:
         return (
+            "# Contextual example: Use subprocess.run with an argument list and shell=False\n"
+            "# Note: Disabling shell execution prevents metacharacter injection\n"
             "import subprocess\n"
-            "# Pass arguments as a list without shell=True\n"
-            "result = subprocess.run([\"/usr/bin/tool\", sanitized_arg], capture_output=True, text=True, check=True)"
+            "result = subprocess.run([\"/usr/bin/tool\", user_input], capture_output=True, text=True, check=True)"
         )
 
 
@@ -414,10 +428,23 @@ def generate_static_analysis_fallback(code: str, language: str, error_msg: str =
         re.IGNORECASE
     )
 
-    cmd_regex = re.compile(
-        r'(?:child_process\.(?:exec|spawn|execSync)|os\.system|subprocess\.(?:Popen|call|run)|Runtime\.getRuntime\(\)\.exec)\s*\([^)]*(?:\+|`|\$|\{)',
-        re.IGNORECASE
-    )
+    cmd_patterns = [
+        # os.system or os.popen with variable/expression or dynamic string
+        r'\bos\.(?:system|popen)\s*\(\s*(?:[^)"\']\s*[^)]*|["\'].*?["\']\s*[\+\%]|f["\'].*?\{|`.*?\$\{)',
+        # subprocess with shell=True
+        r'\bsubprocess\.(?:call|run|Popen|check_output|check_call)\s*\([^)]*shell\s*=\s*True',
+        # subprocess with variable or concatenation as command
+        r'\bsubprocess\.(?:call|run|Popen|check_output|check_call)\s*\(\s*(?:[^)"\'\[\s][^),]*|f["\'].*?\{|["\'].*?["\']\s*[\+\%])',
+        # child_process.exec or execSync with variable or dynamic string
+        r'\bchild_process\.(?:exec|execSync)\s*\(\s*(?:[^)"\']\s*[^)]*|["\'].*?["\']\s*\+|`.*?\$\{)',
+        # standalone exec(variable) in Node.js
+        r'(?<!\.)\bexec\s*\(\s*(?:[^)"\']\s*[^)]*|["\'].*?["\']\s*\+|`.*?\$\{)',
+        # Java Runtime.getRuntime().exec
+        r'\bRuntime\.getRuntime\(\)\.exec\s*\(\s*(?:[^)"\']\s*[^)]*|["\'].*?["\']\s*\+)',
+        # C/C++ system or popen with variable
+        r'(?<![a-zA-Z0-9_.])(?:system|popen)\s*\(\s*(?:[^)"\']\s*[^)]*|["\'].*?["\']\s*\+)'
+    ]
+    cmd_regex = re.compile('|'.join(f'(?:{p})' for p in cmd_patterns), re.IGNORECASE)
 
     xss_regex = re.compile(
         r'(?:\.innerHTML\s*=|document\.write\s*\(|dangerouslySetInnerHTML)',
@@ -476,16 +503,19 @@ def generate_static_analysis_fallback(code: str, language: str, error_msg: str =
 
         # Check Command Injection
         if cmd_regex.search(line):
+            is_direct_exploit = bool(re.search(r'\b(?:request|req\.|params|argv|input\s*\(|stdin)\b', line, re.IGNORECASE))
+            cmd_severity = 'Critical' if is_direct_exploit else 'High'
+            cmd_message = 'Command Injection Vulnerability' if is_direct_exploit else 'Potential Command Injection Vulnerability'
             issues.append({
                 'category': 'Security',
-                'severity': 'Critical',
+                'severity': cmd_severity,
                 'line_number': idx,
-                'message': 'Potential Command Injection Risk',
-                'explanation': 'Operating system commands are executed with dynamic string concatenation. Unsanitized user input could permit arbitrary command execution on the host server.',
-                'recommendation': 'Avoid invoking OS shells with dynamic input. Pass command arguments as a validated array without shell interpretation.',
+                'message': cmd_message,
+                'explanation': 'Executing untrusted input through a shell can allow an attacker to inject shell metacharacters and execute arbitrary system commands with the privileges of the host process.',
+                'recommendation': 'Avoid invoking shell interpreters. Use safe argument arrays with shell execution disabled (e.g., subprocess.run(["command", user_input], shell=False, check=True) in Python, or child_process.execFile in Node.js).',
                 'suggested_code': _get_cmd_suggested_code(language)
             })
-            score -= 25
+            score -= 25 if cmd_severity == 'Critical' else 20
 
         # Check XSS
         if xss_regex.search(line):
