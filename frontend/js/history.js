@@ -13,8 +13,42 @@ document.addEventListener('DOMContentLoaded', async () => {
   const deleteModalEl = document.getElementById('deleteConfirmModal');
 
   let bsDeleteModal = null;
+  let lastActiveTrigger = null;
+
   if (deleteModalEl && window.bootstrap) {
     bsDeleteModal = new bootstrap.Modal(deleteModalEl);
+
+    // Ensure aria-hidden is not present when showing or active
+    deleteModalEl.addEventListener('show.bs.modal', () => {
+      deleteModalEl.removeAttribute('aria-hidden');
+    });
+
+    // Move focus inside the modal when opened (Cancel button for safety)
+    deleteModalEl.addEventListener('shown.bs.modal', () => {
+      deleteModalEl.removeAttribute('aria-hidden');
+      const cancelBtn = document.getElementById('cancelDeleteBtn') || deleteModalEl.querySelector('[data-bs-dismiss="modal"]');
+      if (cancelBtn) {
+        cancelBtn.focus();
+      }
+    });
+
+    // Release focus from modal descendants before hide sets aria-hidden
+    deleteModalEl.addEventListener('hide.bs.modal', () => {
+      if (deleteModalEl.contains(document.activeElement)) {
+        document.activeElement.blur();
+      }
+    });
+
+    // Return focus to the triggering element after closing (or fallback if deleted)
+    deleteModalEl.addEventListener('hidden.bs.modal', () => {
+      if (lastActiveTrigger && document.body.contains(lastActiveTrigger)) {
+        lastActiveTrigger.focus();
+      } else {
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) searchInput.focus();
+      }
+      lastActiveTrigger = null;
+    });
   }
 
   let allReviews = [];
@@ -113,9 +147,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Attach delete listeners
     document.querySelectorAll('.delete-review-btn').forEach(btn => {
       btn.addEventListener('click', () => {
+        lastActiveTrigger = btn;
         pendingDeleteId = btn.getAttribute('data-id');
         if (bsDeleteModal) {
-          bsDeleteModal.show();
+          bsDeleteModal.show(btn);
         } else if (confirm('Are you sure you want to delete this review?')) {
           executeDelete(pendingDeleteId);
         }
@@ -141,9 +176,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (confirmDeleteBtn) {
     confirmDeleteBtn.addEventListener('click', async () => {
       if (pendingDeleteId) {
-        if (bsDeleteModal) bsDeleteModal.hide();
-        await executeDelete(pendingDeleteId);
+        const idToDelete = pendingDeleteId;
         pendingDeleteId = null;
+        if (bsDeleteModal) {
+          bsDeleteModal.hide();
+        }
+        await executeDelete(idToDelete);
       }
     });
   }

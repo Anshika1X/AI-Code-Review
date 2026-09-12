@@ -23,6 +23,19 @@ document.addEventListener('DOMContentLoaded', () => {
   let bsGithubModal = null;
   if (githubModalEl && window.bootstrap) {
     bsGithubModal = new bootstrap.Modal(githubModalEl);
+    githubModalEl.addEventListener('show.bs.modal', () => {
+      githubModalEl.removeAttribute('aria-hidden');
+    });
+    githubModalEl.addEventListener('hide.bs.modal', () => {
+      if (githubModalEl.contains(document.activeElement)) {
+        document.activeElement.blur();
+      }
+    });
+    githubModalEl.addEventListener('hidden.bs.modal', () => {
+      if (githubModalBtn) {
+        githubModalBtn.focus();
+      }
+    });
   }
 
   // Update line and character stats
@@ -171,7 +184,7 @@ def fetch_user_data(user_id):
   // GitHub Modal launcher
   if (githubModalBtn && bsGithubModal) {
     githubModalBtn.addEventListener('click', () => {
-      bsGithubModal.show();
+      bsGithubModal.show(githubModalBtn);
     });
   }
 
