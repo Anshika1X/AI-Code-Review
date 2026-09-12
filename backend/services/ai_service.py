@@ -15,6 +15,7 @@ def build_review_prompt(code: str, language: str) -> str:
     Build a comprehensive, developer-focused system prompt for Gemini code review.
     Enforces a rigorous security checklist across taint analysis, query safety,
     command execution, credential exposure, and architectural cleanliness.
+    Demands concrete, usable refactored code instead of placeholder comments.
     """
     return f"""You are a principal software engineer and security auditor conducting an automated code review.
 Review the following source code with high technical precision.
@@ -55,6 +56,12 @@ EVIDENCE & ATTRIBUTION RULES:
 - ALWAYS identify the exact 1-indexed line_number where the issue originates.
 - Do NOT skip general code quality or logging findings while reporting security findings (e.g., if code has both a SQL injection and a console.log, report BOTH).
 - Categorize security issues strictly as "Security".
+
+SUGGESTED REFACTORING CODE RULES:
+- When an issue has a meaningful code fix, "suggested_code" MUST contain actual corrected code statements or functions, not merely explanatory comments or placeholders.
+- For SQL injection caused by string concatenation: provide a practical parameterized query or prepared statement appropriate to {language} (e.g. $1 with parameters array for JavaScript/pg, %s with parameter tuple for Python, or PreparedStatement for Java).
+- If the specific database library or driver is unknown from the snippet, provide a standard parameterized pattern and clearly label it as a contextual example without claiming it is guaranteed to execute without the driver.
+- Preserve the developer's original function/variable naming where possible.
 
 RETURN FORMAT:
 You MUST return ONLY a strictly valid JSON object matching this exact schema:
@@ -246,6 +253,124 @@ def analyze_code_with_gemini(code: str, language: str) -> dict:
         return generate_static_analysis_fallback(code, language, error_msg=str(exc))
 
 
+def _get_sql_suggested_code(language: str) -> str:
+    """Generate language-specific, practical parameterized query code."""
+    lang = (language or '').lower()
+    if any(k in lang for k in ('javascript', 'typescript', 'js', 'ts', 'node')):
+        return (
+            "// Contextual example: Parameterized query (e.g. pg / mysql2)\n"
+            "// Bind user parameters separately from SQL syntax to prevent injection:\n"
+            "const query = \"SELECT * FROM users WHERE name = $1\";\n"
+            "const params = [username];\n"
+            "const result = await db.query(query, params);"
+        )
+    elif 'python' in lang or 'py' in lang:
+        return (
+            "# Contextual example: Parameterized query (e.g. sqlite3 / psycopg2)\n"
+            "# Pass parameters as a separate tuple to allow the driver to escape safely:\n"
+            "query = \"SELECT * FROM users WHERE name = %s\"\n"
+            "cursor.execute(query, (username,))\n"
+            "records = cursor.fetchall()"
+        )
+    elif 'java' in lang:
+        return (
+            "// Contextual example: Parameterized query using PreparedStatement\n"
+            "String sql = \"SELECT * FROM users WHERE name = ?\";\n"
+            "try (PreparedStatement stmt = connection.prepareStatement(sql)) {\n"
+            "    stmt.setString(1, username);\n"
+            "    ResultSet rs = stmt.executeQuery();\n"
+            "}"
+        )
+    else:
+        return (
+            "-- Contextual example: Parameterized query placeholder\n"
+            "SELECT * FROM users WHERE name = ?;"
+        )
+
+
+def _get_logging_suggested_code(language: str) -> str:
+    """Generate language-specific structured logging code."""
+    lang = (language or '').lower()
+    if any(k in lang for k in ('javascript', 'typescript', 'js', 'ts', 'node')):
+        return (
+            "// Use structured logger with configurable log levels\n"
+            "logger.info(\"Retrieved user query\", { query });"
+        )
+    else:
+        return (
+            "# Use logging module instead of raw print\n"
+            "import logging\n"
+            "logger = logging.getLogger(__name__)\n"
+            "logger.info(\"Retrieved user query: %s\", query)"
+        )
+
+
+def _get_secret_suggested_code(language: str) -> str:
+    """Generate language-specific environment variable credential code."""
+    lang = (language or '').lower()
+    if any(k in lang for k in ('javascript', 'typescript', 'js', 'ts', 'node')):
+        return (
+            "// Read credentials securely from environment variables\n"
+            "const apiKey = process.env.API_KEY;"
+        )
+    else:
+        return (
+            "# Read credentials securely from environment variables\n"
+            "import os\n"
+            "api_key = os.environ.get(\"API_KEY\")"
+        )
+
+
+def _get_cmd_suggested_code(language: str) -> str:
+    """Generate language-specific command execution code without shell invocation."""
+    lang = (language or '').lower()
+    if any(k in lang for k in ('javascript', 'typescript', 'js', 'ts', 'node')):
+        return (
+            "const { execFile } = require('child_process');\n"
+            "// Pass arguments as a sanitized array without invoking a shell\n"
+            "execFile('/usr/bin/tool', [sanitizedArg], (err, stdout) => {\n"
+            "    if (err) throw err;\n"
+            "    console.log(stdout);\n"
+            "});"
+        )
+    else:
+        return (
+            "import subprocess\n"
+            "# Pass arguments as a list without shell=True\n"
+            "result = subprocess.run([\"/usr/bin/tool\", sanitized_arg], capture_output=True, text=True, check=True)"
+        )
+
+
+def _get_xss_suggested_code(language: str) -> str:
+    """Generate XSS prevention code."""
+    return (
+        "// Assign plain text safely to prevent script execution\n"
+        "element.textContent = userInput;"
+    )
+
+
+def _get_bare_except_suggested_code(language: str) -> str:
+    """Generate exception handling code."""
+    lang = (language or '').lower()
+    if any(k in lang for k in ('javascript', 'typescript', 'js', 'ts', 'node')):
+        return (
+            "try {\n"
+            "    performAction();\n"
+            "} catch (error) {\n"
+            "    logger.error(\"Operation failed\", { error: error.message });\n"
+            "    throw error;\n"
+            "}"
+        )
+    else:
+        return (
+            "try:\n"
+            "    perform_action()\n"
+            "except Exception as err:\n"
+            "    logger.error(\"Operation failed: %s\", err)\n"
+            "    raise"
+        )
+
+
 def generate_static_analysis_fallback(code: str, language: str, error_msg: str = None) -> dict:
     """
     Deterministic rule-based fallback analyzer.
@@ -253,13 +378,13 @@ def generate_static_analysis_fallback(code: str, language: str, error_msg: str =
     even if the Gemini API key is missing or temporarily unavailable.
     Performs comprehensive static checks for SQL injection, hardcoded secrets,
     command injection, XSS, logging concerns, and code quality.
+    Provides practical, language-specific suggested code implementations.
     """
     lines = code.splitlines()
     issues = []
     score = 92
 
     # Comprehensive multi-language security rules with compiled regex
-    # Pattern 1: SQL Injection through concatenation or interpolation
     sql_patterns = [
         r'["\'].*?\b(?:SELECT|INSERT|UPDATE|DELETE|FROM|WHERE|VALUES)\b.*?["\']\s*\+\s*[a-zA-Z_$]',
         r'[a-zA-Z_$][a-zA-Z0-9_$]*\s*\+\s*["\'].*?\b(?:SELECT|INSERT|UPDATE|DELETE|FROM|WHERE|VALUES)\b',
@@ -270,31 +395,26 @@ def generate_static_analysis_fallback(code: str, language: str, error_msg: str =
     ]
     sql_regex = re.compile('|'.join(f'(?:{p})' for p in sql_patterns), re.IGNORECASE)
 
-    # Pattern 2: Secrets & Tokens
     secret_regex = re.compile(
         r'(?:password|secret|api_key|apikey|private_key|auth_token)\s*[:=]\s*["\'][a-zA-Z0-9_\-\.]{8,}["\']',
         re.IGNORECASE
     )
 
-    # Pattern 3: Command Injection
     cmd_regex = re.compile(
         r'(?:child_process\.(?:exec|spawn|execSync)|os\.system|subprocess\.(?:Popen|call|run)|Runtime\.getRuntime\(\)\.exec)\s*\([^)]*(?:\+|`|\$|\{)',
         re.IGNORECASE
     )
 
-    # Pattern 4: XSS
     xss_regex = re.compile(
         r'(?:\.innerHTML\s*=|document\.write\s*\(|dangerouslySetInnerHTML)',
         re.IGNORECASE
     )
 
-    # Pattern 5: Bare Except / Empty Catch
     bare_except_regex = re.compile(
         r'except\s*:\s*$|catch\s*\(\s*(?:e|err|error)?\s*\)\s*\{\s*\}',
         re.IGNORECASE
     )
 
-    # Pattern 6: Logging in production
     log_regex = re.compile(
         r'\b(?:console\.log|console\.debug|print)\s*\(',
         re.IGNORECASE
@@ -310,7 +430,7 @@ def generate_static_analysis_fallback(code: str, language: str, error_msg: str =
                 'message': 'Potential SQL Injection Vulnerability',
                 'explanation': 'SQL query appears to be dynamically constructed using direct string concatenation or unparameterized interpolation. If user-controlled input reaches this query, an attacker could manipulate query syntax to read, modify, or destroy database records.',
                 'recommendation': 'Use parameterized queries, prepared statements, or ORM abstractions instead of direct string concatenation.',
-                'suggested_code': '// Example (JavaScript): db.query("SELECT * FROM users WHERE name = $1", [username]);\n# Example (Python): cursor.execute("SELECT * FROM users WHERE name = %s", (username,))'
+                'suggested_code': _get_sql_suggested_code(language)
             })
             score -= 25
 
@@ -323,7 +443,7 @@ def generate_static_analysis_fallback(code: str, language: str, error_msg: str =
                 'message': 'Potential Hardcoded Secret or Credential',
                 'explanation': 'Sensitive credential or key appears to be hardcoded directly in the source code. Hardcoded credentials can easily leak via version control or build artifacts.',
                 'recommendation': 'Store credentials in environment variables or an encrypted key management service (e.g. AWS Secrets Manager, Vault).',
-                'suggested_code': '# Read securely from environment variable\nimport os\napi_key = os.getenv("API_KEY")'
+                'suggested_code': _get_secret_suggested_code(language)
             })
             score -= 15
 
@@ -336,7 +456,7 @@ def generate_static_analysis_fallback(code: str, language: str, error_msg: str =
                 'message': 'Potential Command Injection Risk',
                 'explanation': 'Operating system commands are executed with dynamic string concatenation. Unsanitized user input could permit arbitrary command execution on the host server.',
                 'recommendation': 'Avoid invoking OS shells with dynamic input. Pass command arguments as a validated array without shell interpretation.',
-                'suggested_code': '// Use parameterized arguments array without shell execution\nexecFile("/usr/bin/tool", [validatedArg]);'
+                'suggested_code': _get_cmd_suggested_code(language)
             })
             score -= 25
 
@@ -349,7 +469,7 @@ def generate_static_analysis_fallback(code: str, language: str, error_msg: str =
                 'message': 'Potential Cross-Site Scripting (XSS) Risk',
                 'explanation': 'Direct assignment to innerHTML or document.write bypasses HTML encoding. If unsanitized input is rendered, malicious JavaScript can execute in the user browser.',
                 'recommendation': 'Use textContent, innerText, or context-aware DOM sanitization libraries (e.g., DOMPurify) before inserting HTML.',
-                'suggested_code': '// Use textContent to prevent script execution\nelement.textContent = userInput;'
+                'suggested_code': _get_xss_suggested_code(language)
             })
             score -= 15
 
@@ -362,7 +482,7 @@ def generate_static_analysis_fallback(code: str, language: str, error_msg: str =
                 'message': 'Bare Exception Clause Detected',
                 'explanation': 'Catching all exceptions indiscriminately or silently suppressing errors masks critical application bugs, system interrupts, and database connection failures.',
                 'recommendation': 'Specify concrete exception classes and ensure appropriate logging or error escalation occurs.',
-                'suggested_code': 'try {\n    performAction();\n} catch (error) {\n    logger.error("Operation failed:", error);\n    throw error;\n}'
+                'suggested_code': _get_bare_except_suggested_code(language)
             })
             score -= 8
 
@@ -375,7 +495,7 @@ def generate_static_analysis_fallback(code: str, language: str, error_msg: str =
                 'message': 'Production Logging Warning',
                 'explanation': 'Direct console.log or print statements found in application logic. In production environments, standard output can degrade performance and risk leaking sensitive query data.',
                 'recommendation': 'Replace direct console or print statements with a configurable logging framework supporting structured levels (INFO, WARN, ERROR).',
-                'suggested_code': '// Use structured logger\nlogger.info("Executing user query");'
+                'suggested_code': _get_logging_suggested_code(language)
             })
             score -= 4
 

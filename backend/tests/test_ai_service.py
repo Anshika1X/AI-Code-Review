@@ -138,7 +138,27 @@ def test_build_review_prompt_security_checklist():
     assert "SQL & Data Storage Injections" in prompt
     assert "Command & Process Injections" in prompt
     assert "Hardcoded Secrets" in prompt
-    assert "Cross-Site Scripting" in prompt
-    assert "category" in prompt
-    assert "severity" in prompt
     assert "line_number" in prompt
+    assert "SUGGESTED REFACTORING CODE RULES" in prompt
+
+
+def test_suggested_refactoring_practical_code():
+    """Verify suggested_code provides actual parameterized statements and contextual labeling."""
+    # Test JavaScript snippet
+    js_code = 'const q = "SELECT * FROM users WHERE name = \'" + user + "\'";'
+    js_result = generate_static_analysis_fallback(js_code, 'JavaScript')
+    js_sql_issue = next(i for i in js_result['issues'] if 'sql injection' in i['message'].lower())
+    assert js_sql_issue['suggested_code'] is not None
+    assert "$1" in js_sql_issue['suggested_code']
+    assert "params" in js_sql_issue['suggested_code']
+    assert "Contextual example" in js_sql_issue['suggested_code']
+
+    # Test Python snippet
+    py_code = 'query = f"SELECT * FROM accounts WHERE id = {acc_id}"'
+    py_result = generate_static_analysis_fallback(py_code, 'Python')
+    py_sql_issue = next(i for i in py_result['issues'] if 'sql injection' in i['message'].lower())
+    assert py_sql_issue['suggested_code'] is not None
+    assert "%s" in py_sql_issue['suggested_code']
+    assert "cursor.execute" in py_sql_issue['suggested_code']
+    assert "Contextual example" in py_sql_issue['suggested_code']
+

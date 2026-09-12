@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     totalIssuesBadge.textContent = `${allIssues.length} Finding${allIssues.length === 1 ? '' : 's'}`;
     summaryText.textContent = reviewData.summary;
 
-    // Set score circle color (muted, sophisticated)
+    // Set score circle color
     if (reviewData.score >= 80) {
       scoreCircle.style.borderColor = '#4F5D2A';
       scoreValue.style.color = '#4F5D2A';
@@ -80,15 +80,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     countMedium.textContent = medium;
     countLow.textContent = low;
 
-    // Display original code
+    // Display original code exactly as submitted (preserved permanently)
     originalCodeBlock.textContent = reviewData.code || '// No source code provided';
     const lines = (reviewData.code || '').split('\n').length;
-    origLineCount.textContent = `${lines} lines`;
+    origLineCount.textContent = `${lines} line${lines === 1 ? '' : 's'}`;
 
-    // Aggregate suggested code
+    // Aggregate practical suggested refactorings
     const suggestedSnippets = allIssues
       .filter(i => i.suggested_code && i.suggested_code.trim())
-      .map(i => `// Line ${i.line_number || 'General Scope'} - ${i.message}\n${i.suggested_code}`);
+      .map(i => {
+        const lineInfo = i.line_number ? `Line ${i.line_number}` : 'Global';
+        return `// [${lineInfo} - ${i.category}] ${i.message}\n${i.suggested_code}`;
+      });
 
     if (suggestedSnippets.length > 0) {
       combinedSuggestedCode = suggestedSnippets.join('\n\n// ----------------------------------------\n\n');
@@ -137,7 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    issuesContainer.innerHTML = filtered.map(issue => {
+    issuesContainer.innerHTML = filtered.map((issue, idx) => {
       const sev = issue.severity || 'Medium';
       const cat = issue.category || 'Code Quality';
       const lineNum = issue.line_number ? `Line ${issue.line_number}` : 'Global';
@@ -166,7 +169,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           ${issue.suggested_code ? `
             <div class="mt-3">
-              <div class="small fw-semibold text-muted mb-1 text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Suggested Refactoring</div>
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small fw-semibold text-muted text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Suggested Refactoring</span>
+                <button type="button" class="btn btn-sm btn-subtle copy-single-snippet-btn" data-index="${idx}" style="padding: 0.15rem 0.5rem; font-size: 0.72rem;">
+                  Copy Snippet
+                </button>
+              </div>
               <div class="code-snippet-box">
                 <code>${escapeHtml(issue.suggested_code)}</code>
               </div>
@@ -175,29 +183,65 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
       `;
     }).join('');
+
+    // Attach listeners to per-issue copy buttons
+    document.querySelectorAll('.copy-single-snippet-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const issueIdx = parseInt(btn.getAttribute('data-index'), 10);
+        const issue = filtered[issueIdx];
+        if (issue && issue.suggested_code) {
+          try {
+            await copyTextToClipboard(issue.suggested_code);
+            const originalText = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => { btn.textContent = originalText; }, 1800);
+            showToast('Code snippet copied to clipboard.', 'info');
+          } catch {
+            showToast('Unable to copy to clipboard.', 'error');
+          }
+        }
+      });
+    });
   }
 
-  // Copy suggested code handler
-  copySuggestedCodeBtn.addEventListener('click', async () => {
-    if (!combinedSuggestedCode) {
-      showToast('No suggested code to copy.', 'info');
-      return;
-    }
+  // Master copy suggested code button
+  if (copySuggestedCodeBtn) {
+    copySuggestedCodeBtn.addEventListener('click', async () => {
+      if (!combinedSuggestedCode) {
+        showToast('No suggested code to copy.', 'info');
+        return;
+      }
 
-    try {
-      await navigator.clipboard.writeText(combinedSuggestedCode);
-      showToast('Suggested code copied to clipboard.', 'info');
-    } catch {
-      const textarea = document.createElement('textarea');
-      textarea.value = combinedSuggestedCode;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      textarea.remove();
-      showToast('Suggested code copied to clipboard.', 'info');
-    }
-  });
+      try {
+        await copyTextToClipboard(combinedSuggestedCode);
+        const originalHtml = copySuggestedCodeBtn.innerHTML;
+        copySuggestedCodeBtn.innerHTML = `
+          <svg style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Copied!</span>
+        `;
+        setTimeout(() => {
+          copySuggestedCodeBtn.innerHTML = originalHtml;
+        }, 2000);
+        showToast('Full suggested code copied to clipboard.', 'info');
+      } catch {
+        showToast('Unable to copy code to clipboard.', 'error');
+      }
+    });
+  }
 });
+
+async function copyTextToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text);
+  }
+  // Fallback
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  textarea.remove();
+}
 
 function escapeHtml(text) {
   if (!text) return '';
