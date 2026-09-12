@@ -3,65 +3,65 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Register - AI Code Review</title>
+  <title>Create Account - AI Code Review</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body class="d-flex flex-column min-vh-100 justify-content-center align-items-center py-4">
 
-  <div class="container" style="max-width: 460px;">
-    <!-- Brand Logo -->
+  <div class="container" style="max-width: 420px;">
+    <!-- Brand Header -->
     <div class="text-center mb-4">
       <a href="index.html" class="brand-logo justify-content-center mb-2">
-        <div class="brand-logo-icon">AI</div>
+        <div class="brand-logo-icon">AC</div>
         <span>AI CODE REVIEW</span>
       </a>
-      <p class="text-muted small">Create an account to start analyzing your source code</p>
+      <p class="text-muted small mb-0">Create an engineer account to start reviewing code</p>
     </div>
 
     <!-- Registration Card -->
     <div class="card-clean p-4">
-      <h4 class="fw-bold mb-3 text-center">Create Your Account</h4>
+      <h5 class="fw-bold mb-3">Create Account</h5>
 
       <!-- Error Alert Box -->
-      <div id="errorAlert" class="alert alert-danger py-2 small d-none" role="alert"></div>
+      <div id="errorAlert" class="alert alert-danger py-2 small d-none" role="alert" style="font-size: 0.8rem;"></div>
 
       <form id="registerForm" novalidate>
         <div class="mb-3">
-          <label for="name" class="form-label small fw-semibold text-muted">FULL NAME</label>
-          <input type="text" class="form-control" id="name" placeholder="John Doe" required autocomplete="name">
+          <label for="name" class="form-label small fw-bold text-muted" style="font-size: 0.72rem; letter-spacing: 0.05em;">FULL NAME</label>
+          <input type="text" class="form-control" id="name" placeholder="Alex Developer" required autocomplete="name">
         </div>
 
         <div class="mb-3">
-          <label for="email" class="form-label small fw-semibold text-muted">EMAIL ADDRESS</label>
-          <input type="email" class="form-control" id="email" placeholder="john@example.com" required autocomplete="email">
+          <label for="email" class="form-label small fw-bold text-muted" style="font-size: 0.72rem; letter-spacing: 0.05em;">EMAIL ADDRESS</label>
+          <input type="email" class="form-control" id="email" placeholder="alex@company.com" required autocomplete="email">
         </div>
 
         <div class="mb-3">
-          <label for="password" class="form-label small fw-semibold text-muted">PASSWORD (MIN 6 CHARACTERS)</label>
+          <label for="password" class="form-label small fw-bold text-muted" style="font-size: 0.72rem; letter-spacing: 0.05em;">PASSWORD (MIN 6 CHARS)</label>
           <input type="password" class="form-control" id="password" placeholder="••••••••" required autocomplete="new-password">
         </div>
 
         <div class="mb-3">
-          <label for="confirmPassword" class="form-label small fw-semibold text-muted">CONFIRM PASSWORD</label>
+          <label for="confirmPassword" class="form-label small fw-bold text-muted" style="font-size: 0.72rem; letter-spacing: 0.05em;">CONFIRM PASSWORD</label>
           <input type="password" class="form-control" id="confirmPassword" placeholder="••••••••" required autocomplete="new-password">
         </div>
 
         <button type="submit" id="submitBtn" class="btn-olive w-100 justify-content-center py-2 mt-2">
-          <span>Create Account</span>
+          <span>Register Account</span>
         </button>
       </form>
 
       <div class="text-center mt-4 pt-3 border-top">
-        <p class="small text-muted mb-0">Already have an account? <a href="login.html" class="fw-bold" style="color: var(--primary-olive);">Sign in here</a></p>
+        <p class="small text-muted mb-0">Already registered? <a href="login.html" class="fw-semibold" style="color: var(--primary-olive);">Sign in</a></p>
       </div>
     </div>
 
     <div class="text-center mt-3">
-      <a href="index.html" class="small text-muted text-decoration-none">← Back to home</a>
+      <a href="index.html" class="small text-muted text-decoration-none">&larr; Return to homepage</a>
     </div>
   </div>
 
@@ -86,7 +86,6 @@
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
 
-        // Validations
         if (!name || !email || !password || !confirmPassword) {
           errorAlert.textContent = 'Please fill in all required fields.';
           errorAlert.classList.remove('d-none');
@@ -118,10 +117,10 @@
 
           if (res.success && res.token) {
             Auth.saveAuth(res.token, res.user);
-            showToast('Account registered successfully! Redirecting...', 'info');
+            showToast('Account created.', 'info');
             setTimeout(() => {
               window.location.href = 'dashboard.html';
-            }, 600);
+            }, 500);
           } else {
             throw new Error(res.error || 'Registration failed');
           }
@@ -130,7 +129,7 @@
           errorAlert.classList.remove('d-none');
         } finally {
           submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span>Create Account</span>';
+          submitBtn.innerHTML = '<span>Register Account</span>';
         }
       });
     });

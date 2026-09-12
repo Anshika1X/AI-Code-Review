@@ -30,12 +30,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const text = codeEditor.value;
     const lines = text ? text.split('\n').length : 0;
     const chars = text.length;
-    editorStats.textContent = `${lines} line${lines === 1 ? '' : 's'} | ${chars} characters`;
+    editorStats.textContent = `${lines} line${lines === 1 ? '' : 's'} | ${chars} chars`;
   }
 
   codeEditor.addEventListener('input', updateStats);
 
-  // Allow pressing Tab inside textarea to insert 4 spaces instead of losing focus
+  // Tab key indentation support (4 spaces)
   codeEditor.addEventListener('keydown', (e) => {
     if (e.key === 'Tab') {
       e.preventDefault();
@@ -49,61 +49,67 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Clear button
   clearBtn.addEventListener('click', () => {
-    if (codeEditor.value.trim() && !confirm('Are you sure you want to clear the editor?')) {
+    if (codeEditor.value.trim() && !confirm('Clear current code in editor?')) {
       return;
     }
     codeEditor.value = '';
     updateStats();
   });
 
-  // Sample code loader
-  sampleCodeBtn.addEventListener('click', () => {
-    languageSelect.value = 'Python';
-    codeEditor.value = `import os
+  // Sample code snippets (cycling between JavaScript and Python security test cases)
+  let sampleIndex = 0;
+  const sampleSnippets = [
+    {
+      language: 'JavaScript',
+      code: `function getUser(username) {
+    // Dynamic SQL query construction without parameterization
+    const query = "SELECT * FROM users WHERE name = '" + username + "'";
+    console.log(query);
+    return query;
+}
+
+getUser("admin");`
+    },
+    {
+      language: 'Python',
+      code: `import os
 import sqlite3
 
-# Sample Python backend service
-DATABASE_PATH = "production_data.db"
-API_SECRET_KEY = "AIzaSyB391-fake-super-secret-key"
+# Backend user lookup service
+API_KEY = "sk_live_9948172648194719"
 
-def fetch_user_profile(user_id):
-    """Fetch user profile details from database."""
-    conn = sqlite3.connect(DATABASE_PATH)
+def fetch_user_data(user_id):
+    conn = sqlite3.connect("users.db")
     cursor = conn.cursor()
-    
-    # Potential SQL injection risk
-    query = "SELECT id, username, email FROM users WHERE id = " + str(user_id)
-    
+    # SQL query construction via string concatenation
+    query = "SELECT * FROM users WHERE id = " + str(user_id)
     try:
         cursor.execute(query)
-        user = cursor.fetchone()
-        return user
+        return cursor.fetchone()
     except:
-        # Bare except clause masks critical runtime exceptions
-        print("Database query failed!")
+        print("Database query failed")
         return None
     finally:
-        conn.close()
+        conn.close()`
+    }
+  ];
 
-def compute_analytics(data_list):
-    """Redundant nested computation causing performance degradation."""
-    results = []
-    for item in data_list:
-        if item in [x for x in data_list if x > 0]:
-            results.append(item * 2)
-    return results
-`;
+  sampleCodeBtn.addEventListener('click', () => {
+    const sample = sampleSnippets[sampleIndex % sampleSnippets.length];
+    languageSelect.value = sample.language;
+    codeEditor.value = sample.code;
+    sampleIndex++;
     updateStats();
-    showToast('Loaded sample code containing security & performance findings!', 'info');
+    showToast(`Loaded ${sample.language} sample containing security findings.`, 'info');
   });
 
-  // Animated loading step runner
+  // Multi-stage loading progress
   let loadingInterval = null;
   const stages = [
-    { title: 'Analyzing Code Structure...', subtitle: 'Parsing abstract syntax tree and logic flow', progress: 25 },
-    { title: 'Checking Security Vulnerabilities...', subtitle: 'Scanning for secrets, SQL injections, and OWASP risks', progress: 50 },
-    { title: 'Evaluating Performance & Efficiency...', subtitle: 'Detecting complexity bottlenecks and resource leaks', progress: 75 },
-    { title: 'Generating AI Recommendations...', subtitle: 'Synthesizing refactored code and final quality score', progress: 92 }
+    { title: 'Analyzing Code Structure...', subtitle: 'Evaluating AST, control flow, and taint propagation', progress: 25 },
+    { title: 'Security & Injection Audit...', subtitle: 'Scanning for SQL injection, credentials, and OWASP risks', progress: 50 },
+    { title: 'Performance & Resource Analysis...', subtitle: 'Checking computational complexity and memory allocations', progress: 75 },
+    { title: 'Synthesizing Recommendations...', subtitle: 'Generating refactored code implementations and scoring', progress: 92 }
   ];
 
   function startLoadingStages() {
@@ -174,7 +180,7 @@ def compute_analytics(data_list):
     fetchGithubBtn.addEventListener('click', async () => {
       const repoUrl = document.getElementById('githubRepoUrl').value.trim();
       const filePath = document.getElementById('githubFilePath').value.trim();
-      const branch = document.getElementById('githubBranch').value.trim() || 'main';
+      const branch = document.getElementById('githubBranch').value.trim() || 'master';
 
       if (!repoUrl || !filePath) {
         showToast('Please enter both repository URL and file path.', 'error');

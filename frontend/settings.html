@@ -8,17 +8,17 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
   <!-- Mobile Topbar -->
   <div class="mobile-topbar d-lg-none">
     <a class="brand-logo" href="dashboard.html">
-      <div class="brand-logo-icon">AI</div>
+      <div class="brand-logo-icon">AC</div>
       <span>AI CODE REVIEW</span>
     </a>
-    <button class="btn btn-sm btn-olive-outline" id="sidebarToggle">☰ Menu</button>
+    <button class="btn btn-sm btn-subtle" id="sidebarToggle">Menu</button>
   </div>
 
   <div class="app-wrapper">
@@ -26,7 +26,7 @@
     <aside class="app-sidebar">
       <div class="sidebar-header">
         <a class="brand-logo" href="dashboard.html">
-          <div class="brand-logo-icon">AI</div>
+          <div class="brand-logo-icon">AC</div>
           <span>AI CODE REVIEW</span>
         </a>
       </div>
@@ -34,25 +34,25 @@
       <ul class="sidebar-menu">
         <li class="sidebar-item">
           <a href="dashboard.html" class="sidebar-link">
-            <span>📊</span>
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
             <span>Dashboard</span>
           </a>
         </li>
         <li class="sidebar-item">
           <a href="review.html" class="sidebar-link">
-            <span>✨</span>
+            <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
             <span>New Review</span>
           </a>
         </li>
         <li class="sidebar-item">
           <a href="history.html" class="sidebar-link">
-            <span>📜</span>
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             <span>Review History</span>
           </a>
         </li>
         <li class="sidebar-item">
           <a href="settings.html" class="sidebar-link active">
-            <span>⚙️</span>
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             <span>Settings</span>
           </a>
         </li>
@@ -62,37 +62,39 @@
         <div class="d-flex align-items-center justify-content-between">
           <div class="overflow-hidden">
             <div class="fw-bold small user-name-display text-truncate">Developer</div>
-            <div class="text-muted small user-email-display text-truncate" style="font-size: 0.78rem;">user@example.com</div>
+            <div class="text-muted small user-email-display text-truncate" style="font-size: 0.75rem;">user@example.com</div>
           </div>
-          <button class="btn btn-sm btn-link p-0 text-muted btn-logout" title="Sign Out">🚪</button>
+          <button class="btn btn-sm btn-link p-0 text-muted btn-logout" title="Sign Out">
+            <svg style="width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none;" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          </button>
         </div>
       </div>
     </aside>
 
-    <!-- Main Content -->
+    <!-- Main Content Area -->
     <main class="app-main">
       <div class="mb-4">
-        <h2 class="fw-bold mb-1">Application Settings</h2>
-        <p class="text-muted small mb-0">Manage your profile, backend API endpoints, and connectivity diagnostics</p>
+        <h2 class="fw-bold mb-1">Developer Settings</h2>
+        <p class="text-muted small mb-0">System connectivity, backend API endpoint configuration, and profile diagnostics</p>
       </div>
 
-      <div class="row g-4" style="max-width: 900px;">
+      <div class="row g-4" style="max-width: 860px;">
         <!-- User Profile Card -->
         <div class="col-12">
           <div class="card-clean">
-            <h5 class="fw-bold mb-3">User Profile</h5>
+            <h6 class="fw-bold mb-3">User Profile</h6>
             <div class="row g-3">
               <div class="col-sm-6">
-                <label class="small fw-bold text-muted text-uppercase">Full Name</label>
-                <div class="form-control-plaintext fw-semibold user-name-display">Developer</div>
+                <div class="small fw-bold text-muted text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">Full Name</div>
+                <div class="fw-semibold user-name-display text-dark">Developer</div>
               </div>
               <div class="col-sm-6">
-                <label class="small fw-bold text-muted text-uppercase">Email Address</label>
-                <div class="form-control-plaintext fw-semibold user-email-display">user@example.com</div>
+                <div class="small fw-bold text-muted text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">Email Address</div>
+                <div class="fw-semibold user-email-display text-dark">user@example.com</div>
               </div>
             </div>
             <div class="mt-3 pt-3 border-top">
-              <button class="btn btn-sm btn-outline-danger btn-logout">Sign Out of Account</button>
+              <button class="btn btn-sm btn-subtle text-danger btn-logout">Sign Out of Session</button>
             </div>
           </div>
         </div>
@@ -100,41 +102,40 @@
         <!-- API Endpoint Configuration Card -->
         <div class="col-12">
           <div class="card-clean">
-            <h5 class="fw-bold mb-2">Backend API Configuration</h5>
-            <p class="small text-muted mb-3">Configure where this frontend sends API requests. Useful when switching between local development (<code>http://localhost:5000</code>) and a deployed Render backend.</p>
+            <h6 class="fw-bold mb-1">Backend API Endpoint</h6>
+            <p class="small text-muted mb-3">Configurable target URL for frontend network requests. Allows switching between local development and Render deployment.</p>
 
             <div class="mb-3">
-              <label for="apiUrlInput" class="form-label small fw-bold text-muted text-uppercase">API Base URL</label>
+              <label for="apiUrlInput" class="form-label small fw-bold text-muted text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">API BASE URL</label>
               <div class="input-group">
                 <input type="url" id="apiUrlInput" class="form-control" placeholder="http://localhost:5000">
-                <button type="button" id="saveApiUrlBtn" class="btn btn-olive">Save & Ping</button>
-                <button type="button" id="resetApiUrlBtn" class="btn btn-outline-secondary">Reset to Default</button>
+                <button type="button" id="saveApiUrlBtn" class="btn btn-olive">Save &amp; Ping</button>
+                <button type="button" id="resetApiUrlBtn" class="btn btn-subtle">Reset</button>
               </div>
-              <div class="form-text small">Leave blank to use automatic origin detection.</div>
             </div>
 
             <!-- Health Status Diagnostic -->
-            <div class="p-3 rounded-3" style="background-color: var(--very-light-olive); border: 1px solid var(--border-color);">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="fw-bold small">System Diagnostics</span>
-                <span class="badge" id="healthBadge" style="background-color: #68705B; color: white;">Checking...</span>
+            <div class="p-3 rounded-2" style="background-color: var(--very-light-olive); border: 1px solid var(--border-color);">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-bold small" style="font-size: 0.78rem; letter-spacing: 0.04em;">SYSTEM DIAGNOSTICS</span>
+                <span class="badge" id="healthBadge" style="background-color: #68705B; color: white; font-size: 0.7rem;">Checking...</span>
               </div>
-              <div class="small text-muted" id="healthDetails">Pinging /api/health...</div>
+              <div class="small text-muted" id="healthDetails" style="font-size: 0.8rem;">Pinging /api/health...</div>
             </div>
           </div>
         </div>
 
-        <!-- Project Interview Information Card -->
+        <!-- Technical Architecture Overview -->
         <div class="col-12">
-          <div class="card-clean" style="background-color: var(--very-light-olive); border-left: 4px solid var(--primary-olive);">
-            <h5 class="fw-bold mb-2">Fresher Interview Checklist</h5>
-            <p class="small text-muted mb-3">Key talking points prepared for your Graduate Engineer Trainee interview:</p>
-            <ul class="small text-muted mb-0 ps-3">
-              <li><strong>REST API:</strong> Structured endpoints using JSON and HTTP status codes (200, 201, 400, 401, 404, 500).</li>
-              <li><strong>Database:</strong> PostgreSQL with SQLAlchemy ORM, cascading foreign keys, and transaction management.</li>
-              <li><strong>Security:</strong> Salted password hashing via Scrypt and signed JWT tokens with 24h expiration.</li>
-              <li><strong>AI Integration:</strong> Google Gemini 1.5/2.5 Flash via REST API with strict JSON schema enforcement.</li>
-              <li><strong>Testing:</strong> 18 automated Pytest test cases and a comprehensive Postman API test collection.</li>
+          <div class="card-clean" style="border-left: 3px solid var(--primary-olive);">
+            <h6 class="fw-bold mb-2">Graduate Engineer Trainee Portfolio Architecture</h6>
+            <p class="small text-muted mb-2">Key system modules ready for technical explanation:</p>
+            <ul class="small text-muted mb-0 ps-3" style="line-height: 1.6;">
+              <li><strong>REST API:</strong> Modular Flask blueprints with standardized HTTP status codes and JSON payloads.</li>
+              <li><strong>ORM &amp; Database:</strong> PostgreSQL with cascading foreign keys and transactions via SQLAlchemy 2.0.</li>
+              <li><strong>Security:</strong> Scrypt password hashing, 24-hour stateless JWT tokens, and automated taint/injection audit prompt.</li>
+              <li><strong>AI Engine:</strong> Google Gemini API via REST with strict JSON schema normalizer and deterministic static fallback.</li>
+              <li><strong>Verification:</strong> 20 automated Pytest unit/integration tests and an exportable Postman collection.</li>
             </ul>
           </div>
         </div>
@@ -169,11 +170,11 @@
           healthDetails.innerHTML = `
             <strong>Service:</strong> ${res.service || 'AI Code Review'}<br>
             <strong>Database:</strong> ${res.database || 'connected'}<br>
-            <strong>Gemini API:</strong> ${res.gemini_configured ? 'Configured' : 'Offline Heuristic Fallback'}
+            <strong>Gemini API:</strong> ${res.gemini_configured ? 'Configured' : 'Offline Static Fallback'}
           `;
         } catch (err) {
           healthBadge.textContent = 'Disconnected';
-          healthBadge.style.backgroundColor = '#B94A48';
+          healthBadge.style.backgroundColor = '#9E3836';
           healthDetails.innerHTML = `<span class="text-danger">Failed to connect: ${err.message}</span>`;
         }
       }

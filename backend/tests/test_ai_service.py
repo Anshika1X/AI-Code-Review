@@ -90,10 +90,55 @@ def query(val):
     assert 'Bugs' in categories
 
 
-def test_build_review_prompt():
-    """Verify prompt constructor includes language and code."""
-    prompt = build_review_prompt("x = 42", "Python")
-    assert "Programming Language: Python" in prompt
-    assert "x = 42" in prompt
-    assert "Bugs" in prompt
-    assert "Security" in prompt
+def test_javascript_sql_injection_and_console_log():
+    """
+    Verify the user's exact JavaScript snippet:
+    Detects both the potential SQL injection risk on line 2 (Security / High or Critical)
+    and the production console.log statement on line 3 (Code Quality).
+    """
+    js_snippet = """function getUser(username) {
+    const query = "SELECT * FROM users WHERE name = '" + username + "'";
+    console.log(query);
+    return query;
+}
+
+getUser("admin");"""
+
+    result = generate_static_analysis_fallback(js_snippet, 'JavaScript')
+    issues = result['issues']
+
+    # Must detect findings
+    assert len(issues) >= 2, f"Expected at least 2 findings, got {len(issues)}"
+
+    # 1. Check SQL injection
+    sql_issues = [i for i in issues if 'sql injection' in i['message'].lower()]
+    assert len(sql_issues) >= 1, "SQL injection was not detected in JavaScript snippet!"
+    sql_finding = sql_issues[0]
+    assert sql_finding['category'] == 'Security'
+    assert sql_finding['severity'] in ['High', 'Critical']
+    assert sql_finding['line_number'] == 2
+    assert 'parameterized' in sql_finding['recommendation'].lower()
+
+    # 2. Check console.log
+    log_issues = [i for i in issues if 'logging' in i['message'].lower()]
+    assert len(log_issues) >= 1, "Console.log was not detected in JavaScript snippet!"
+    log_finding = log_issues[0]
+    assert log_finding['category'] == 'Code Quality'
+    assert log_finding['line_number'] == 3
+
+    # Overall score must reflect security penalty
+    assert result['score'] < 80
+
+
+def test_build_review_prompt_security_checklist():
+    """Verify prompt constructor includes systematic security checklist."""
+    prompt = build_review_prompt("const x = 42;", "JavaScript")
+    assert "Programming Language: JavaScript" in prompt
+    assert "MANDATORY SECURITY AUDIT CHECKLIST" in prompt
+    assert "SQL & Data Storage Injections" in prompt
+    assert "Command & Process Injections" in prompt
+    assert "Hardcoded Secrets" in prompt
+    assert "Cross-Site Scripting" in prompt
+    assert "category" in prompt
+    assert "severity" in prompt
+    assert "line_number" in prompt

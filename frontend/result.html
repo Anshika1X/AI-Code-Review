@@ -3,22 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Review Results - AI Code Review</title>
+  <title>Code Review Report - AI Code Review</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
   <!-- Mobile Topbar -->
   <div class="mobile-topbar d-lg-none">
     <a class="brand-logo" href="dashboard.html">
-      <div class="brand-logo-icon">AI</div>
+      <div class="brand-logo-icon">AC</div>
       <span>AI CODE REVIEW</span>
     </a>
-    <button class="btn btn-sm btn-olive-outline" id="sidebarToggle">☰ Menu</button>
+    <button class="btn btn-sm btn-subtle" id="sidebarToggle">Menu</button>
   </div>
 
   <div class="app-wrapper">
@@ -26,7 +26,7 @@
     <aside class="app-sidebar">
       <div class="sidebar-header">
         <a class="brand-logo" href="dashboard.html">
-          <div class="brand-logo-icon">AI</div>
+          <div class="brand-logo-icon">AC</div>
           <span>AI CODE REVIEW</span>
         </a>
       </div>
@@ -34,25 +34,25 @@
       <ul class="sidebar-menu">
         <li class="sidebar-item">
           <a href="dashboard.html" class="sidebar-link">
-            <span>📊</span>
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
             <span>Dashboard</span>
           </a>
         </li>
         <li class="sidebar-item">
           <a href="review.html" class="sidebar-link">
-            <span>✨</span>
+            <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
             <span>New Review</span>
           </a>
         </li>
         <li class="sidebar-item">
           <a href="history.html" class="sidebar-link">
-            <span>📜</span>
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             <span>Review History</span>
           </a>
         </li>
         <li class="sidebar-item">
           <a href="settings.html" class="sidebar-link">
-            <span>⚙️</span>
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             <span>Settings</span>
           </a>
         </li>
@@ -62,85 +62,91 @@
         <div class="d-flex align-items-center justify-content-between">
           <div class="overflow-hidden">
             <div class="fw-bold small user-name-display text-truncate">Developer</div>
-            <div class="text-muted small user-email-display text-truncate" style="font-size: 0.78rem;">user@example.com</div>
+            <div class="text-muted small user-email-display text-truncate" style="font-size: 0.75rem;">user@example.com</div>
           </div>
-          <button class="btn btn-sm btn-link p-0 text-muted btn-logout" title="Sign Out">🚪</button>
+          <button class="btn btn-sm btn-link p-0 text-muted btn-logout" title="Sign Out">
+            <svg style="width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none;" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          </button>
         </div>
       </div>
     </aside>
 
-    <!-- Main Content -->
+    <!-- Main Content Area -->
     <main class="app-main">
+      <!-- Top Actions Bar -->
       <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <div>
           <div class="d-flex align-items-center gap-2 mb-1">
             <a href="dashboard.html" class="small text-muted text-decoration-none">Dashboard</a>
-            <span class="small text-muted">/</span>
+            <span class="small text-muted">&gt;</span>
             <span class="small text-muted" id="breadcrumbReviewId">Review Report</span>
           </div>
-          <h2 class="fw-bold mb-0">Code Review Report</h2>
+          <h2 class="fw-bold mb-0">Code Analysis Report</h2>
         </div>
         <div class="d-flex gap-2">
-          <a href="review.html" class="btn btn-sm btn-olive-outline">+ Review Another File</a>
-          <button type="button" class="btn btn-sm btn-olive" onclick="window.print()">🖨️ Print / Save PDF</button>
+          <a href="review.html" class="btn btn-sm btn-subtle">+ Review Another File</a>
+          <button type="button" class="btn btn-sm btn-olive" onclick="window.print()">
+            <svg style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none;" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            <span>Export / Print</span>
+          </button>
         </div>
       </div>
 
-      <!-- Report Header Card -->
+      <!-- Executive Overview Card -->
       <div class="card-clean mb-4">
-        <div class="row align-items-center g-3">
+        <div class="row align-items-center g-4">
           <div class="col-md-auto text-center">
             <div class="score-badge-circle mx-auto" id="scoreCircle">
               <span class="score-num" id="scoreValue">--</span>
-              <span class="score-max">/ 100</span>
+              <span class="score-max">SCORE</span>
             </div>
           </div>
           <div class="col-md">
             <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
-              <span class="badge" style="background-color: var(--light-olive); color: var(--dark-olive);" id="languageBadge">Python</span>
+              <span class="badge" style="background-color: var(--light-olive); color: var(--dark-olive); font-weight: 600;" id="languageBadge">Language</span>
               <span class="small text-muted" id="timestampBadge">Timestamp</span>
-              <span class="badge bg-light text-dark border" id="totalIssuesBadge">0 Issues Found</span>
+              <span class="badge bg-white text-dark border" id="totalIssuesBadge">0 Findings</span>
             </div>
-            <h5 class="fw-bold mb-2">Executive Summary</h5>
-            <p class="text-muted mb-0" id="summaryText">Loading review analysis...</p>
+            <h6 class="fw-bold mb-2">Executive Summary</h6>
+            <p class="text-dark small mb-0" id="summaryText" style="line-height: 1.6;">Loading audit report...</p>
           </div>
         </div>
       </div>
 
-      <!-- Severity Summary Cards -->
+      <!-- Severity Breakdown Tiles -->
       <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
-          <div class="card-clean text-center py-3" style="border-top: 4px solid var(--severity-critical);">
-            <div class="small fw-bold text-muted">CRITICAL</div>
-            <div class="fs-3 fw-bold text-danger" id="countCritical">0</div>
+          <div class="card-clean text-center py-3" style="border-top: 3px solid var(--sev-critical-text);">
+            <div class="small fw-bold text-muted" style="font-size: 0.72rem; letter-spacing: 0.06em;">CRITICAL</div>
+            <div class="fs-4 fw-bold" style="color: var(--sev-critical-text);" id="countCritical">0</div>
           </div>
         </div>
         <div class="col-6 col-md-3">
-          <div class="card-clean text-center py-3" style="border-top: 4px solid var(--severity-high);">
-            <div class="small fw-bold text-muted">HIGH</div>
-            <div class="fs-3 fw-bold" style="color: var(--severity-high);" id="countHigh">0</div>
+          <div class="card-clean text-center py-3" style="border-top: 3px solid var(--sev-high-text);">
+            <div class="small fw-bold text-muted" style="font-size: 0.72rem; letter-spacing: 0.06em;">HIGH</div>
+            <div class="fs-4 fw-bold" style="color: var(--sev-high-text);" id="countHigh">0</div>
           </div>
         </div>
         <div class="col-6 col-md-3">
-          <div class="card-clean text-center py-3" style="border-top: 4px solid var(--severity-medium);">
-            <div class="small fw-bold text-muted">MEDIUM</div>
-            <div class="fs-3 fw-bold" style="color: var(--primary-olive);" id="countMedium">0</div>
+          <div class="card-clean text-center py-3" style="border-top: 3px solid var(--primary-olive);">
+            <div class="small fw-bold text-muted" style="font-size: 0.72rem; letter-spacing: 0.06em;">MEDIUM</div>
+            <div class="fs-4 fw-bold" style="color: var(--dark-olive);" id="countMedium">0</div>
           </div>
         </div>
         <div class="col-6 col-md-3">
-          <div class="card-clean text-center py-3" style="border-top: 4px solid var(--severity-low);">
-            <div class="small fw-bold text-muted">LOW</div>
-            <div class="fs-3 fw-bold text-secondary" id="countLow">0</div>
+          <div class="card-clean text-center py-3" style="border-top: 3px solid var(--muted-text);">
+            <div class="small fw-bold text-muted" style="font-size: 0.72rem; letter-spacing: 0.06em;">LOW</div>
+            <div class="fs-4 fw-bold text-secondary" id="countLow">0</div>
           </div>
         </div>
       </div>
 
-      <!-- Issues Section with Category Filter Tabs -->
+      <!-- Findings with Category Filter Tabs -->
       <div class="mb-4">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-          <h4 class="fw-bold mb-0">Identified Issues & Recommendations</h4>
-          <div class="filter-tabs mb-0" id="categoryFilterTabs">
-            <button class="filter-btn active" data-category="ALL">All Issues</button>
+          <h5 class="fw-bold mb-0">Detailed Audit Findings</h5>
+          <div class="filter-tabs" id="categoryFilterTabs">
+            <button class="filter-btn active" data-category="ALL">All Findings</button>
             <button class="filter-btn" data-category="Security">Security</button>
             <button class="filter-btn" data-category="Bugs">Bugs</button>
             <button class="filter-btn" data-category="Performance">Performance</button>
@@ -157,39 +163,36 @@
         </div>
       </div>
 
-      <!-- Original vs Suggested Code Diff Section -->
-      <div class="card-clean mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+      <!-- Code Comparison Section -->
+      <div class="card-clean mb-4 p-0 overflow-hidden">
+        <div class="d-flex justify-content-between align-items-center px-3 py-3 border-bottom flex-wrap gap-2">
           <div>
-            <h4 class="fw-bold mb-1">Code Comparison & Suggestions</h4>
-            <p class="small text-muted mb-0">Compare the submitted code alongside AI refactoring suggestions</p>
+            <h6 class="fw-bold mb-0">Code Comparison & Suggestions</h6>
+            <p class="small text-muted mb-0" style="font-size: 0.78rem;">Submitted source code alongside recommended refactoring implementations</p>
           </div>
           <button type="button" class="btn btn-sm btn-olive" id="copySuggestedCodeBtn">
-            📋 Copy Suggested Code
+            <svg style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none;" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copy Suggested Code</span>
           </button>
         </div>
 
-        <div class="row g-3">
-          <!-- Original Code Box -->
-          <div class="col-lg-6">
-            <div class="border rounded-3 overflow-hidden">
-              <div class="px-3 py-2 bg-light border-bottom d-flex justify-content-between align-items-center">
-                <span class="small fw-bold text-muted">ORIGINAL SUBMISSION</span>
-                <span class="badge bg-secondary-subtle text-secondary" id="origLineCount">0 lines</span>
-              </div>
-              <pre class="p-3 mb-0" style="background-color: #F8F9F3; max-height: 450px; overflow-y: auto; font-family: var(--mono-font); font-size: 0.85rem;"><code id="originalCodeBlock"></code></pre>
+        <div class="row g-0">
+          <!-- Original Code -->
+          <div class="col-lg-6 border-end">
+            <div class="px-3 py-2 bg-light border-bottom d-flex justify-content-between align-items-center">
+              <span class="small fw-bold text-muted text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">Original Code</span>
+              <span class="badge bg-white text-muted border" id="origLineCount">0 lines</span>
             </div>
+            <pre class="p-3 mb-0" style="background-color: #141712; color: #DDE5CE; max-height: 480px; overflow-y: auto; font-family: var(--font-mono); font-size: 0.82rem; line-height: 1.6;"><code id="originalCodeBlock"></code></pre>
           </div>
 
-          <!-- Suggested Refactoring Box -->
+          <!-- Suggested Code -->
           <div class="col-lg-6">
-            <div class="border rounded-3 overflow-hidden">
-              <div class="px-3 py-2 bg-light border-bottom d-flex justify-content-between align-items-center">
-                <span class="small fw-bold text-success">SUGGESTED REFACTORING</span>
-                <span class="badge bg-success-subtle text-success">Recommended</span>
-              </div>
-              <pre class="p-3 mb-0" style="background-color: #1A2016; color: #E8EDD8; max-height: 450px; overflow-y: auto; font-family: var(--mono-font); font-size: 0.85rem;"><code id="suggestedCodeBlock"></code></pre>
+            <div class="px-3 py-2 bg-light border-bottom d-flex justify-content-between align-items-center">
+              <span class="small fw-bold text-dark text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">Suggested Refactoring</span>
+              <span class="badge" style="background-color: var(--light-olive); color: var(--dark-olive); font-size: 0.7rem;">Recommended</span>
             </div>
+            <pre class="p-3 mb-0" style="background-color: #141712; color: #DDE5CE; max-height: 480px; overflow-y: auto; font-family: var(--font-mono); font-size: 0.82rem; line-height: 1.6;"><code id="suggestedCodeBlock"></code></pre>
           </div>
         </div>
       </div>

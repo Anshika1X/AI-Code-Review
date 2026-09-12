@@ -11,9 +11,13 @@ VALID_SEVERITIES = {'Critical', 'High', 'Medium', 'Low'}
 
 
 def build_review_prompt(code: str, language: str) -> str:
-    """Build a structured system prompt for Gemini code review."""
-    return f"""You are an experienced software engineering tech lead performing a professional code review.
-Review the following source code carefully.
+    """
+    Build a comprehensive, developer-focused system prompt for Gemini code review.
+    Enforces a rigorous security checklist across taint analysis, query safety,
+    command execution, credential exposure, and architectural cleanliness.
+    """
+    return f"""You are a principal software engineer and security auditor conducting an automated code review.
+Review the following source code with high technical precision.
 
 Programming Language: {language}
 
@@ -22,32 +26,55 @@ Source Code:
 {code}
 ```
 
-Analyze the code thoroughly for:
-1. Bugs and logical flaws
-2. Potential security vulnerabilities (distinguish confirmed flaws from potential concerns; do not claim exploitable unless verified)
-3. Performance issues and efficiency bottlenecks
-4. Code quality, maintainability, and clean code principles
-5. Error handling and edge cases
-6. Language-specific best practices
+MANDATORY SECURITY AUDIT CHECKLIST:
+Before determining the final findings, you MUST systematically analyze the code against each of these vectors:
+1. SQL & Data Storage Injections:
+   - Check if SQL, NoSQL, or database queries are constructed using string concatenation (+), string interpolation, format strings (% or .format() or f-strings), or template literals (`...${{var}}...`) with untrusted or function parameter inputs.
+   - Treat unparameterized/concatenated SQL queries with parameters as HIGH or CRITICAL severity.
+2. Command & Process Injections:
+   - Check if shell, OS commands, or process execution functions (e.g., exec, spawn, system, popen, subprocess) receive unsanitized input.
+3. Hardcoded Secrets & Credentials:
+   - Check for hardcoded API keys, JWT secrets, passwords, private keys, database connection strings, or cloud tokens.
+4. Cross-Site Scripting (XSS) & Output Encoding:
+   - Check if user-controlled input reaches DOM manipulation (innerHTML, document.write) or web responses without sanitization.
+5. Insecure Authentication & Authorization:
+   - Check for missing authentication boundaries, weak credential verification, hardcoded roles, or insecure session tokens.
+6. Path Traversal & Unsafe File Operations:
+   - Check if file system paths are constructed from untrusted input without canonicalization or directory traversal prevention (e.g. ../).
+7. Sensitive Data Exposure & Production Logging:
+   - Check if sensitive data, internal tokens, or debug details are logged (e.g. console.log, print) or leaked in exceptions.
+8. Memory & Resource Safety / Performance:
+   - Check for unbounded loops, unindexed queries, connection leaks, or redundant memory allocations.
+9. Bugs & Logical Flaws:
+   - Check for off-by-one errors, null/undefined dereferences, unhandled exceptions, or bare except blocks.
+10. Code Quality & Maintainability:
+   - Check adherence to language best practices, modularity, and clean code principles.
 
-You MUST return a strictly valid JSON object matching this schema exactly:
+EVIDENCE & ATTRIBUTION RULES:
+- Clearly distinguish confirmed vulnerabilities from potential risks. If the context indicates a likely issue but exploitability depends on caller behavior, describe it as a "Potential" issue.
+- ALWAYS identify the exact 1-indexed line_number where the issue originates.
+- Do NOT skip general code quality or logging findings while reporting security findings (e.g., if code has both a SQL injection and a console.log, report BOTH).
+- Categorize security issues strictly as "Security".
+
+RETURN FORMAT:
+You MUST return ONLY a strictly valid JSON object matching this exact schema:
 {{
-  "score": <integer from 0 to 100 representing overall code quality>,
-  "summary": "<2 to 4 sentence executive overview of the code's strengths and primary areas for improvement>",
+  "score": <integer from 0 to 100 representing overall code quality and security posture>,
+  "summary": "<2 to 4 sentence executive overview summarizing security findings, code quality, and key improvements>",
   "issues": [
     {{
       "category": "<Must be one of: Security, Bugs, Performance, Code Quality, Best Practices, Maintainability>",
       "severity": "<Must be one of: Critical, High, Medium, Low>",
-      "line_number": <integer line number if applicable, or null>,
-      "message": "<Concise one-line title describing the finding>",
-      "explanation": "<Clear technical explanation of why this is a concern>",
-      "recommendation": "<Actionable guidance on how to fix or improve it>",
-      "suggested_code": "<Refactored snippet showing the correct implementation, or null>"
+      "line_number": <integer line number where the issue occurs, or null if file-wide>,
+      "message": "<Concise one-line title describing the specific finding>",
+      "explanation": "<Clear technical explanation of why this code pattern is problematic and what risks it introduces>",
+      "recommendation": "<Actionable engineering guidance on how to fix or refactor this>",
+      "suggested_code": "<Refactored code snippet showing the secure and idiomatic implementation, or null>"
     }}
   ]
 }}
 
-Return ONLY valid JSON. Do not include introductory text or trailing markdown fences outside the JSON.
+Do NOT wrap the JSON with conversational text or markdown fences outside the JSON string.
 """
 
 
@@ -95,11 +122,31 @@ def validate_and_normalize_review(parsed_data: dict, original_code: str) -> dict
 
         category = str(item.get('category', 'Code Quality')).strip()
         if category not in VALID_CATEGORIES:
-            category = 'Code Quality'
+            cat_lower = category.lower()
+            if 'sec' in cat_lower or 'vulnerab' in cat_lower:
+                category = 'Security'
+            elif 'bug' in cat_lower or 'error' in cat_lower:
+                category = 'Bugs'
+            elif 'perf' in cat_lower or 'speed' in cat_lower:
+                category = 'Performance'
+            elif 'maintain' in cat_lower:
+                category = 'Maintainability'
+            elif 'best' in cat_lower or 'practice' in cat_lower:
+                category = 'Best Practices'
+            else:
+                category = 'Code Quality'
 
         severity = str(item.get('severity', 'Medium')).strip().capitalize()
         if severity not in VALID_SEVERITIES:
-            severity = 'Medium'
+            sev_lower = severity.lower()
+            if 'crit' in sev_lower:
+                severity = 'Critical'
+            elif 'high' in sev_lower:
+                severity = 'High'
+            elif 'low' in sev_lower or 'info' in sev_lower:
+                severity = 'Low'
+            else:
+                severity = 'Medium'
 
         message = str(item.get('message', 'Potential issue identified')).strip()
         explanation = str(item.get('explanation', 'Review identified potential improvement.')).strip()
@@ -175,7 +222,6 @@ def analyze_code_with_gemini(code: str, language: str) -> dict:
 
         if response.status_code != 200:
             logger.error(f"Gemini API returned status {response.status_code}: {response.text}")
-            # If rate limited or invalid key, return clear message or fallback
             return generate_static_analysis_fallback(code, language, error_msg=f"Gemini API status {response.status_code}")
 
         res_data = response.json()
@@ -205,75 +251,137 @@ def generate_static_analysis_fallback(code: str, language: str, error_msg: str =
     Deterministic rule-based fallback analyzer.
     Ensures that testing, live demonstrations, and interviews work smoothly
     even if the Gemini API key is missing or temporarily unavailable.
-    Performs real static checks for common vulnerabilities and quality issues.
+    Performs comprehensive static checks for SQL injection, hardcoded secrets,
+    command injection, XSS, logging concerns, and code quality.
     """
     lines = code.splitlines()
     issues = []
-    score = 88
+    score = 92
 
-    # Check 1: Hardcoded credentials/secrets
-    secret_patterns = [
-        (r'(?i)(password|secret|api_key|apikey|token|private_key)\s*=\s*["\'][^"\']+["\']',
-         'Potential Hardcoded Credential', 'Security', 'High',
-         'Sensitive credential or key appears to be hardcoded directly in the source file.',
-         'Store secrets in environment variables or a secure key management system.',
-         '# Example: Read from environment variable\nimport os\napi_key = os.getenv("API_KEY")'),
-        (r'(?i)(select\s+.+\s+from\s+.+\s+where\s+.+\s*(=|\+)\s*["\']?\s*\+)',
-         'Potential SQL Injection Vulnerability', 'Security', 'Critical',
-         'Dynamic SQL query construction detected with string concatenation.',
-         'Use parameterized queries or ORM abstractions instead of direct concatenation.',
-         '# Use parameterized query\ncursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))'),
-        (r'except\s*:\s*$',
-         'Bare Except Clause Detected', 'Bugs', 'Medium',
-         'Catching all exceptions indiscriminately masks critical bugs and system exits.',
-         'Specify concrete exception classes such as Exception or ValueError.',
-         'try:\n    perform_action()\nexcept ValueError as err:\n    logger.error(f"Invalid input: {err}")'),
-        (r'(console\.log|print)\(',
-         'Production Logging Warning', 'Code Quality', 'Low',
-         'Direct print/console statements detected in application code.',
-         'Use a structured logger with configurable log levels (DEBUG, INFO, ERROR).',
-         '# Use logging library\nimport logging\nlogger = logging.getLogger(__name__)\nlogger.info("Operation completed")')
+    # Comprehensive multi-language security rules with compiled regex
+    # Pattern 1: SQL Injection through concatenation or interpolation
+    sql_patterns = [
+        r'["\'].*?\b(?:SELECT|INSERT|UPDATE|DELETE|FROM|WHERE|VALUES)\b.*?["\']\s*\+\s*[a-zA-Z_$]',
+        r'[a-zA-Z_$][a-zA-Z0-9_$]*\s*\+\s*["\'].*?\b(?:SELECT|INSERT|UPDATE|DELETE|FROM|WHERE|VALUES)\b',
+        r'`.*?\b(?:SELECT|INSERT|UPDATE|DELETE|FROM|WHERE|VALUES)\b.*?\$\{.*?\}',
+        r'`.*?\$\{.*?\}.*?\b(?:SELECT|INSERT|UPDATE|DELETE|FROM|WHERE|VALUES)\b.*?`',
+        r'f["\'].*?\b(?:SELECT|INSERT|UPDATE|DELETE|FROM|WHERE|VALUES)\b.*?\{.*?\}.*?["\']',
+        r'["\'].*?\b(?:SELECT|INSERT|UPDATE|DELETE|FROM|WHERE)\b.*?["\']\s*(?:%|\.format\s*\()'
     ]
+    sql_regex = re.compile('|'.join(f'(?:{p})' for p in sql_patterns), re.IGNORECASE)
+
+    # Pattern 2: Secrets & Tokens
+    secret_regex = re.compile(
+        r'(?:password|secret|api_key|apikey|private_key|auth_token)\s*[:=]\s*["\'][a-zA-Z0-9_\-\.]{8,}["\']',
+        re.IGNORECASE
+    )
+
+    # Pattern 3: Command Injection
+    cmd_regex = re.compile(
+        r'(?:child_process\.(?:exec|spawn|execSync)|os\.system|subprocess\.(?:Popen|call|run)|Runtime\.getRuntime\(\)\.exec)\s*\([^)]*(?:\+|`|\$|\{)',
+        re.IGNORECASE
+    )
+
+    # Pattern 4: XSS
+    xss_regex = re.compile(
+        r'(?:\.innerHTML\s*=|document\.write\s*\(|dangerouslySetInnerHTML)',
+        re.IGNORECASE
+    )
+
+    # Pattern 5: Bare Except / Empty Catch
+    bare_except_regex = re.compile(
+        r'except\s*:\s*$|catch\s*\(\s*(?:e|err|error)?\s*\)\s*\{\s*\}',
+        re.IGNORECASE
+    )
+
+    # Pattern 6: Logging in production
+    log_regex = re.compile(
+        r'\b(?:console\.log|console\.debug|print)\s*\(',
+        re.IGNORECASE
+    )
 
     for idx, line in enumerate(lines, 1):
-        for pattern, title, category, severity, explanation, rec, suggested in secret_patterns:
-            if re.search(pattern, line):
-                issues.append({
-                    'category': category,
-                    'severity': severity,
-                    'line_number': idx,
-                    'message': title,
-                    'explanation': explanation,
-                    'recommendation': rec,
-                    'suggested_code': suggested
-                })
-                if severity == 'Critical':
-                    score -= 20
-                elif severity == 'High':
-                    score -= 12
-                elif severity == 'Medium':
-                    score -= 6
-                else:
-                    score -= 3
+        # Check SQL Injection
+        if sql_regex.search(line):
+            issues.append({
+                'category': 'Security',
+                'severity': 'Critical',
+                'line_number': idx,
+                'message': 'Potential SQL Injection Vulnerability',
+                'explanation': 'SQL query appears to be dynamically constructed using direct string concatenation or unparameterized interpolation. If user-controlled input reaches this query, an attacker could manipulate query syntax to read, modify, or destroy database records.',
+                'recommendation': 'Use parameterized queries, prepared statements, or ORM abstractions instead of direct string concatenation.',
+                'suggested_code': '// Example (JavaScript): db.query("SELECT * FROM users WHERE name = $1", [username]);\n# Example (Python): cursor.execute("SELECT * FROM users WHERE name = %s", (username,))'
+            })
+            score -= 25
 
-    # If code is very short or missing comments
-    if len(lines) > 10 and not any('#' in l or '//' in l or '/*' in l for l in lines):
-        issues.append({
-            'category': 'Maintainability',
-            'severity': 'Low',
-            'line_number': 1,
-            'message': 'Missing Documentation or Inline Comments',
-            'explanation': 'The codebase lacks inline comments or docstrings explaining the module purpose and non-obvious logic.',
-            'recommendation': 'Add docstrings to functions and brief comments explaining complex business logic.',
-            'suggested_code': '"""\nModule description: explain purpose and primary functions.\n"""'
-        })
-        score -= 4
+        # Check Hardcoded Secrets
+        if secret_regex.search(line):
+            issues.append({
+                'category': 'Security',
+                'severity': 'High',
+                'line_number': idx,
+                'message': 'Potential Hardcoded Secret or Credential',
+                'explanation': 'Sensitive credential or key appears to be hardcoded directly in the source code. Hardcoded credentials can easily leak via version control or build artifacts.',
+                'recommendation': 'Store credentials in environment variables or an encrypted key management service (e.g. AWS Secrets Manager, Vault).',
+                'suggested_code': '# Read securely from environment variable\nimport os\napi_key = os.getenv("API_KEY")'
+            })
+            score -= 15
 
-    # Keep score in valid range
-    score = max(35, min(95, score))
+        # Check Command Injection
+        if cmd_regex.search(line):
+            issues.append({
+                'category': 'Security',
+                'severity': 'Critical',
+                'line_number': idx,
+                'message': 'Potential Command Injection Risk',
+                'explanation': 'Operating system commands are executed with dynamic string concatenation. Unsanitized user input could permit arbitrary command execution on the host server.',
+                'recommendation': 'Avoid invoking OS shells with dynamic input. Pass command arguments as a validated array without shell interpretation.',
+                'suggested_code': '// Use parameterized arguments array without shell execution\nexecFile("/usr/bin/tool", [validatedArg]);'
+            })
+            score -= 25
 
-    mode_note = " (Static analysis fallback: configure GEMINI_API_KEY for full AI review)" if not os.getenv('GEMINI_API_KEY') else ""
-    summary = f"Code analysis for {language} identified {len(issues)} potential issue(s). Overall code structure is functional but requires attention to security and best practices.{mode_note}"
+        # Check XSS
+        if xss_regex.search(line):
+            issues.append({
+                'category': 'Security',
+                'severity': 'High',
+                'line_number': idx,
+                'message': 'Potential Cross-Site Scripting (XSS) Risk',
+                'explanation': 'Direct assignment to innerHTML or document.write bypasses HTML encoding. If unsanitized input is rendered, malicious JavaScript can execute in the user browser.',
+                'recommendation': 'Use textContent, innerText, or context-aware DOM sanitization libraries (e.g., DOMPurify) before inserting HTML.',
+                'suggested_code': '// Use textContent to prevent script execution\nelement.textContent = userInput;'
+            })
+            score -= 15
+
+        # Check Bare Exceptions
+        if bare_except_regex.search(line):
+            issues.append({
+                'category': 'Bugs',
+                'severity': 'Medium',
+                'line_number': idx,
+                'message': 'Bare Exception Clause Detected',
+                'explanation': 'Catching all exceptions indiscriminately or silently suppressing errors masks critical application bugs, system interrupts, and database connection failures.',
+                'recommendation': 'Specify concrete exception classes and ensure appropriate logging or error escalation occurs.',
+                'suggested_code': 'try {\n    performAction();\n} catch (error) {\n    logger.error("Operation failed:", error);\n    throw error;\n}'
+            })
+            score -= 8
+
+        # Check Logging Statements
+        if log_regex.search(line):
+            issues.append({
+                'category': 'Code Quality',
+                'severity': 'Low',
+                'line_number': idx,
+                'message': 'Production Logging Warning',
+                'explanation': 'Direct console.log or print statements found in application logic. In production environments, standard output can degrade performance and risk leaking sensitive query data.',
+                'recommendation': 'Replace direct console or print statements with a configurable logging framework supporting structured levels (INFO, WARN, ERROR).',
+                'suggested_code': '// Use structured logger\nlogger.info("Executing user query");'
+            })
+            score -= 4
+
+    score = max(20, min(98, score))
+    mode_note = " (Static analysis fallback: configure GEMINI_API_KEY for full generative AI review)" if not os.getenv('GEMINI_API_KEY') else ""
+    summary = f"Code analysis for {language} identified {len(issues)} finding(s). The code requires attention to security best practices, input sanitization, and production standards.{mode_note}"
 
     return {
         'score': score,

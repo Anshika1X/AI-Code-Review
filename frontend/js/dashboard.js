@@ -1,5 +1,5 @@
 /**
- * Dashboard analytics and chart rendering
+ * Dashboard analytics and chart rendering with restrained, cohesive theme
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -24,45 +24,56 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 1. Update Metrics Cards
     statTotalReviews.textContent = stats.total_reviews;
-    statAverageScore.innerHTML = `${stats.average_score}<span class="fs-6 text-muted">/100</span>`;
+    statAverageScore.innerHTML = `${stats.average_score}<span class="fs-6 text-muted fw-normal">/100</span>`;
     statCriticalIssues.textContent = stats.critical_issues;
     statSecurityIssues.textContent = stats.security_issues;
 
     // 2. Render Score Trend Chart (Chart.js)
     const trendCtx = document.getElementById('scoreTrendChart').getContext('2d');
-    const trendLabels = score_trend.map(item => item.date || `Review #${item.id}`);
+    const trendLabels = score_trend.map(item => item.date || `#${item.id}`);
     const trendScores = score_trend.map(item => item.score);
 
     trendChartInstance = new Chart(trendCtx, {
       type: 'line',
       data: {
-        labels: trendLabels.length ? trendLabels : ['No data yet'],
+        labels: trendLabels.length ? trendLabels : ['No reviews yet'],
         datasets: [{
-          label: 'Code Quality Score',
+          label: 'Quality Score',
           data: trendScores.length ? trendScores : [0],
-          borderColor: '#6B7A3A',
-          backgroundColor: 'rgba(107, 122, 58, 0.12)',
-          borderWidth: 2.5,
+          borderColor: '#4F5D2A',
+          backgroundColor: 'rgba(107, 122, 58, 0.08)',
+          borderWidth: 2,
           fill: true,
-          tension: 0.35,
+          tension: 0.25,
           pointBackgroundColor: '#4F5D2A',
-          pointRadius: 4
+          pointBorderColor: '#FFFFFF',
+          pointBorderWidth: 1.5,
+          pointRadius: 3.5
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { display: false }
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1F2418',
+            titleFont: { size: 12 },
+            bodyFont: { size: 12 },
+            padding: 10,
+            cornerRadius: 6
+          }
         },
         scales: {
           y: {
             min: 0,
             max: 100,
-            grid: { color: '#E8EDD8' }
+            grid: { color: '#E8EDD8' },
+            ticks: { font: { size: 11 } }
           },
           x: {
-            grid: { display: false }
+            grid: { display: false },
+            ticks: { font: { size: 11 } }
           }
         }
       }
@@ -80,14 +91,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         datasets: [{
           data: catValues,
           backgroundColor: [
-            '#C87D2B', // Security
-            '#B94A48', // Bugs
-            '#6B7A3A', // Performance
-            '#4F5D2A', // Code Quality
-            '#8A9A5B', // Best Practices
-            '#B0BE96'  // Maintainability
+            '#A66420', // Security (refined amber)
+            '#9E3836', // Bugs (refined crimson)
+            '#4F5D2A', // Performance (dark olive)
+            '#6B7A3A', // Code Quality (primary olive)
+            '#8F9C66', // Best Practices (medium olive)
+            '#68705B'  // Maintainability (slate olive)
           ],
-          borderWidth: 2,
+          borderWidth: 1.5,
           borderColor: '#FFFFFF'
         }]
       },
@@ -97,9 +108,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         plugins: {
           legend: {
             position: 'bottom',
-            labels: { boxWidth: 12, font: { size: 11 } }
+            labels: { boxWidth: 10, font: { size: 11 }, padding: 12 }
           }
-        }
+        },
+        cutout: '68%'
       }
     });
 
@@ -108,35 +120,36 @@ document.addEventListener('DOMContentLoaded', async () => {
       recentTableBody.innerHTML = `
         <tr>
           <td colspan="5" class="text-center py-5 text-muted">
-            <div class="mb-2" style="font-size: 2rem;">🚀</div>
-            <div class="fw-bold mb-1">No reviews yet</div>
-            <p class="small text-muted mb-3">Submit your first code snippet to see AI insights here.</p>
-            <a href="review.html" class="btn-olive btn-sm text-decoration-none">+ Start Your First Review</a>
+            <div class="fw-bold mb-1 text-dark">No reviews recorded</div>
+            <p class="small text-muted mb-3">Submit a code snippet to run automated quality analysis.</p>
+            <a href="review.html" class="btn-olive text-decoration-none">+ Start Code Review</a>
           </td>
         </tr>
       `;
     } else {
       recentTableBody.innerHTML = recent_reviews.map(r => {
-        let badgeColor = 'bg-secondary';
-        if (r.score >= 80) badgeColor = 'bg-success';
-        else if (r.score >= 60) badgeColor = 'bg-warning text-dark';
-        else badgeColor = 'bg-danger';
+        let scoreBadgeStyle = 'background-color: var(--sev-medium-bg); color: var(--sev-medium-text); border: 1px solid var(--sev-medium-border);';
+        if (r.score < 60) {
+          scoreBadgeStyle = 'background-color: var(--sev-critical-bg); color: var(--sev-critical-text); border: 1px solid var(--sev-critical-border);';
+        } else if (r.score < 80) {
+          scoreBadgeStyle = 'background-color: var(--sev-high-bg); color: var(--sev-high-text); border: 1px solid var(--sev-high-border);';
+        }
 
         return `
           <tr>
             <td>
-              <span class="fw-semibold">${escapeHtml(r.language)}</span>
-              <div class="small text-muted text-truncate" style="max-width: 280px;">${escapeHtml(r.summary)}</div>
+              <div class="fw-semibold text-dark">${escapeHtml(r.language)}</div>
+              <div class="small text-muted text-truncate" style="max-width: 320px;">${escapeHtml(r.summary)}</div>
             </td>
             <td>
-              <span class="badge ${badgeColor} px-2 py-1">${r.score}/100</span>
+              <span class="badge px-2 py-1" style="${scoreBadgeStyle}">${r.score} / 100</span>
             </td>
             <td>
-              <span class="badge bg-light text-dark border">${r.issues_count} issues</span>
+              <span class="badge bg-white text-dark border">${r.issues_count} finding${r.issues_count === 1 ? '' : 's'}</span>
             </td>
             <td class="small text-muted">${r.created_at}</td>
             <td class="text-end">
-              <a href="result.html?id=${r.id}" class="btn btn-sm btn-olive-subtle text-decoration-none">View Report →</a>
+              <a href="result.html?id=${r.id}" class="btn btn-sm btn-subtle text-decoration-none">Inspect &rarr;</a>
             </td>
           </tr>
         `;

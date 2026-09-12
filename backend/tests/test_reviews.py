@@ -12,6 +12,14 @@ def get_user_data(user_id):
     return None
 """
 
+SAMPLE_JS_SQL_INJECTION = """function getUser(username) {
+    const query = "SELECT * FROM users WHERE name = '" + username + "'";
+    console.log(query);
+    return query;
+}
+
+getUser("admin");"""
+
 
 def test_create_review_unauthorized(client):
     """Submitting a review without authentication must return 401."""
@@ -48,6 +56,44 @@ def test_create_review_success(client, auth_headers):
     assert 0 <= review['score'] <= 100
     assert 'summary' in review
     assert len(review['issues']) > 0
+
+
+def test_create_review_javascript_sql_injection_end_to_end(client, auth_headers):
+    """
+    End-to-end API test:
+    Verify submitting the user's JavaScript SQL injection code via POST /api/reviews
+    stores and returns findings for SQL injection (Security) and console.log (Code Quality).
+    """
+    res = client.post('/api/reviews', json={
+        'language': 'JavaScript',
+        'code': SAMPLE_JS_SQL_INJECTION
+    }, headers=auth_headers)
+    assert res.status_code == 201
+    data = res.get_json()
+    assert data['success'] is True
+    review = data['review']
+    assert review['language'] == 'JavaScript'
+    assert review['score'] < 80
+
+    issues = review['issues']
+    # Check SQL Injection finding
+    sql_findings = [i for i in issues if 'sql injection' in i['message'].lower()]
+    assert len(sql_findings) >= 1, "SQL Injection issue was not detected in POST /api/reviews response"
+    assert sql_findings[0]['category'] == 'Security'
+    assert sql_findings[0]['severity'] in ['Critical', 'High']
+    assert sql_findings[0]['line_number'] == 2
+
+    # Check Console.log finding
+    log_findings = [i for i in issues if 'logging' in i['message'].lower()]
+    assert len(log_findings) >= 1, "Console.log issue was not detected in POST /api/reviews response"
+    assert log_findings[0]['category'] == 'Code Quality'
+    assert log_findings[0]['line_number'] == 3
+
+    # Check persistence: retrieve via GET /api/reviews/:id
+    get_res = client.get(f'/api/reviews/{review["id"]}', headers=auth_headers)
+    assert get_res.status_code == 200
+    fetched = get_res.get_json()['review']
+    assert len(fetched['issues']) >= 2
 
 
 def test_get_reviews_history(client, auth_headers):

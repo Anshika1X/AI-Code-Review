@@ -53,13 +53,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     totalIssuesBadge.textContent = `${allIssues.length} Finding${allIssues.length === 1 ? '' : 's'}`;
     summaryText.textContent = reviewData.summary;
 
-    // Set score circle color
+    // Set score circle color (muted, sophisticated)
     if (reviewData.score >= 80) {
       scoreCircle.style.borderColor = '#4F5D2A';
+      scoreValue.style.color = '#4F5D2A';
     } else if (reviewData.score >= 60) {
-      scoreCircle.style.borderColor = '#C87D2B';
+      scoreCircle.style.borderColor = '#A66420';
+      scoreValue.style.color = '#A66420';
     } else {
-      scoreCircle.style.borderColor = '#B94A48';
+      scoreCircle.style.borderColor = '#9E3836';
+      scoreValue.style.color = '#9E3836';
     }
 
     // Calculate severity counts
@@ -85,14 +88,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Aggregate suggested code
     const suggestedSnippets = allIssues
       .filter(i => i.suggested_code && i.suggested_code.trim())
-      .map(i => `// Finding (Line ${i.line_number || 'General'}): ${i.message}\n${i.suggested_code}`);
+      .map(i => `// Line ${i.line_number || 'General Scope'} - ${i.message}\n${i.suggested_code}`);
 
     if (suggestedSnippets.length > 0) {
       combinedSuggestedCode = suggestedSnippets.join('\n\n// ----------------------------------------\n\n');
       suggestedCodeBlock.textContent = combinedSuggestedCode;
     } else {
       combinedSuggestedCode = reviewData.code;
-      suggestedCodeBlock.textContent = '// No refactoring needed or suggested for this snippet.';
+      suggestedCodeBlock.textContent = '// No code refactoring recommendations required for this snippet.';
     }
 
     // Render Issue Cards
@@ -111,10 +114,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (err) {
     showToast(err.message, 'error');
     issuesContainer.innerHTML = `
-      <div class="alert alert-danger py-4 text-center">
-        <h5>Error Loading Review</h5>
-        <p class="mb-2">${escapeHtml(err.message)}</p>
-        <a href="dashboard.html" class="btn btn-sm btn-olive mt-2">Return to Dashboard</a>
+      <div class="card-clean text-center py-4 text-danger">
+        <h6 class="fw-bold">Error Loading Review Report</h6>
+        <p class="small mb-2">${escapeHtml(err.message)}</p>
+        <a href="dashboard.html" class="btn btn-sm btn-subtle mt-1">Return to Dashboard</a>
       </div>
     `;
   }
@@ -127,9 +130,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (filtered.length === 0) {
       issuesContainer.innerHTML = `
         <div class="card-clean text-center py-5 text-muted">
-          <div class="mb-2" style="font-size: 2.2rem;">🎉</div>
-          <h5 class="fw-bold text-dark mb-1">No ${categoryFilter === 'ALL' ? '' : categoryFilter} Issues Found</h5>
-          <p class="small text-muted mb-0">The code demonstrates good practices in this area.</p>
+          <h6 class="fw-bold text-dark mb-1">No ${categoryFilter === 'ALL' ? '' : escapeHtml(categoryFilter)} Findings</h6>
+          <p class="small text-muted mb-0">The code adheres to established standards in this category.</p>
         </div>
       `;
       return;
@@ -138,7 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     issuesContainer.innerHTML = filtered.map(issue => {
       const sev = issue.severity || 'Medium';
       const cat = issue.category || 'Code Quality';
-      const lineNum = issue.line_number ? `Line ${issue.line_number}` : 'Global Scope';
+      const lineNum = issue.line_number ? `Line ${issue.line_number}` : 'Global';
 
       return `
         <div class="issue-card severity-${escapeHtml(sev)}">
@@ -150,23 +152,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
           </div>
 
-          <h5 class="fw-bold mb-2 text-dark">${escapeHtml(issue.message)}</h5>
+          <h6 class="fw-bold mb-2 text-dark">${escapeHtml(issue.message)}</h6>
           
           <div class="mb-2">
-            <div class="small fw-bold text-muted text-uppercase" style="letter-spacing: 0.05em; font-size: 0.75rem;">Explanation</div>
+            <div class="small fw-bold text-muted text-uppercase" style="letter-spacing: 0.05em; font-size: 0.7rem;">Explanation</div>
             <p class="small text-dark mb-1">${escapeHtml(issue.explanation)}</p>
           </div>
 
           <div class="mb-3">
-            <div class="small fw-bold text-success text-uppercase" style="letter-spacing: 0.05em; font-size: 0.75rem;">Recommendation</div>
+            <div class="small fw-bold text-uppercase" style="color: var(--dark-olive); letter-spacing: 0.05em; font-size: 0.7rem;">Recommendation</div>
             <p class="small text-dark mb-0">${escapeHtml(issue.recommendation)}</p>
           </div>
 
           ${issue.suggested_code ? `
             <div class="mt-3">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="small fw-semibold text-muted">SUGGESTED IMPLEMENTATION</span>
-              </div>
+              <div class="small fw-semibold text-muted mb-1 text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Suggested Refactoring</div>
               <div class="code-snippet-box">
                 <code>${escapeHtml(issue.suggested_code)}</code>
               </div>
@@ -186,16 +186,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
       await navigator.clipboard.writeText(combinedSuggestedCode);
-      showToast('Suggested code copied to clipboard!', 'info');
+      showToast('Suggested code copied to clipboard.', 'info');
     } catch {
-      // Fallback for older browsers
       const textarea = document.createElement('textarea');
       textarea.value = combinedSuggestedCode;
       document.body.appendChild(textarea);
       textarea.select();
       document.execCommand('copy');
       textarea.remove();
-      showToast('Suggested code copied to clipboard!', 'info');
+      showToast('Suggested code copied to clipboard.', 'info');
     }
   });
 });

@@ -67,9 +67,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       historyTableBody.innerHTML = `
         <tr>
           <td colspan="5" class="text-center py-5 text-muted">
-            <div class="mb-2" style="font-size: 2rem;">🔍</div>
-            <h6 class="fw-bold text-dark">No reviews found</h6>
-            <p class="small text-muted mb-0">Try adjusting your search query or score filter.</p>
+            <h6 class="fw-bold text-dark">No reviews matching criteria</h6>
+            <p class="small text-muted mb-0">Try clearing the search query or changing the filter.</p>
           </td>
         </tr>
       `;
@@ -77,30 +76,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     historyTableBody.innerHTML = filtered.map(r => {
-      let badgeClass = 'bg-secondary';
-      if (r.score >= 80) badgeClass = 'bg-success';
-      else if (r.score >= 60) badgeClass = 'bg-warning text-dark';
-      else badgeClass = 'bg-danger';
+      let scoreBadgeStyle = 'background-color: var(--sev-medium-bg); color: var(--sev-medium-text); border: 1px solid var(--sev-medium-border);';
+      if (r.score < 60) {
+        scoreBadgeStyle = 'background-color: var(--sev-critical-bg); color: var(--sev-critical-text); border: 1px solid var(--sev-critical-border);';
+      } else if (r.score < 80) {
+        scoreBadgeStyle = 'background-color: var(--sev-high-bg); color: var(--sev-high-text); border: 1px solid var(--sev-high-border);';
+      }
 
       const dateStr = r.created_at ? new Date(r.created_at).toLocaleString() : 'Recent';
 
       return `
         <tr>
           <td>
-            <div class="fw-bold">${escapeHtml(r.language)}</div>
-            <div class="small text-muted text-truncate" style="max-width: 320px;">${escapeHtml(r.summary)}</div>
+            <div class="fw-bold text-dark">${escapeHtml(r.language)}</div>
+            <div class="small text-muted text-truncate" style="max-width: 340px;">${escapeHtml(r.summary)}</div>
           </td>
           <td>
-            <span class="badge ${badgeClass} px-2 py-1">${r.score} / 100</span>
+            <span class="badge px-2 py-1" style="${scoreBadgeStyle}">${r.score} / 100</span>
           </td>
           <td>
-            <span class="badge bg-light text-dark border">${r.issues_count} finding${r.issues_count === 1 ? '' : 's'}</span>
+            <span class="badge bg-white text-muted border">${r.issues_count} finding${r.issues_count === 1 ? '' : 's'}</span>
           </td>
           <td class="small text-muted">${dateStr}</td>
           <td class="text-end">
-            <div class="d-inline-flex gap-2">
-              <a href="result.html?id=${r.id}" class="btn btn-sm btn-olive-subtle text-decoration-none">View Report</a>
-              <button type="button" class="btn btn-sm btn-outline-danger delete-review-btn" data-id="${r.id}" title="Delete Review">🗑️</button>
+            <div class="d-inline-flex gap-1">
+              <a href="result.html?id=${r.id}" class="btn btn-sm btn-subtle text-decoration-none" style="padding: 0.25rem 0.65rem; font-size: 0.8rem;">Inspect</a>
+              <button type="button" class="btn btn-sm btn-subtle text-danger delete-review-btn" data-id="${r.id}" title="Delete Review" style="padding: 0.25rem 0.5rem;">
+                <svg style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none;" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
             </div>
           </td>
         </tr>
@@ -109,7 +112,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Attach delete listeners
     document.querySelectorAll('.delete-review-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', () => {
         pendingDeleteId = btn.getAttribute('data-id');
         if (bsDeleteModal) {
           bsDeleteModal.show();
@@ -148,7 +151,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   searchInput.addEventListener('input', renderTable);
   scoreFilterSelect.addEventListener('change', renderTable);
 
-  // Initial load
   loadHistory();
 });
 

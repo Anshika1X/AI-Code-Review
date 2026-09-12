@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -18,10 +18,10 @@
       <div class="spinner-border spinner-olive mb-3" role="status">
         <span class="visually-hidden">Loading...</span>
       </div>
-      <div id="loadingStepTitle" class="loading-step">Analyzing Code...</div>
-      <div id="loadingStepSubtitle" class="loading-substep">Parsing abstract syntax tree and code structure</div>
-      <div class="progress mt-4" style="height: 6px;">
-        <div id="loadingProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 25%; background-color: var(--primary-olive);"></div>
+      <div id="loadingStepTitle" class="loading-step">Analyzing Code Structure...</div>
+      <div id="loadingStepSubtitle" class="loading-substep">Auditing taint flows, queries, and logic patterns</div>
+      <div class="progress mt-3" style="height: 4px; background-color: var(--light-olive);">
+        <div id="loadingProgressBar" class="progress-bar" style="width: 25%; background-color: var(--primary-olive); transition: width 0.3s ease;"></div>
       </div>
     </div>
   </div>
@@ -29,10 +29,10 @@
   <!-- Mobile Topbar -->
   <div class="mobile-topbar d-lg-none">
     <a class="brand-logo" href="dashboard.html">
-      <div class="brand-logo-icon">AI</div>
+      <div class="brand-logo-icon">AC</div>
       <span>AI CODE REVIEW</span>
     </a>
-    <button class="btn btn-sm btn-olive-outline" id="sidebarToggle">☰ Menu</button>
+    <button class="btn btn-sm btn-subtle" id="sidebarToggle">Menu</button>
   </div>
 
   <div class="app-wrapper">
@@ -40,7 +40,7 @@
     <aside class="app-sidebar">
       <div class="sidebar-header">
         <a class="brand-logo" href="dashboard.html">
-          <div class="brand-logo-icon">AI</div>
+          <div class="brand-logo-icon">AC</div>
           <span>AI CODE REVIEW</span>
         </a>
       </div>
@@ -48,25 +48,25 @@
       <ul class="sidebar-menu">
         <li class="sidebar-item">
           <a href="dashboard.html" class="sidebar-link">
-            <span>📊</span>
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
             <span>Dashboard</span>
           </a>
         </li>
         <li class="sidebar-item">
           <a href="review.html" class="sidebar-link active">
-            <span>✨</span>
+            <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
             <span>New Review</span>
           </a>
         </li>
         <li class="sidebar-item">
           <a href="history.html" class="sidebar-link">
-            <span>📜</span>
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             <span>Review History</span>
           </a>
         </li>
         <li class="sidebar-item">
           <a href="settings.html" class="sidebar-link">
-            <span>⚙️</span>
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             <span>Settings</span>
           </a>
         </li>
@@ -76,34 +76,36 @@
         <div class="d-flex align-items-center justify-content-between">
           <div class="overflow-hidden">
             <div class="fw-bold small user-name-display text-truncate">Developer</div>
-            <div class="text-muted small user-email-display text-truncate" style="font-size: 0.78rem;">user@example.com</div>
+            <div class="text-muted small user-email-display text-truncate" style="font-size: 0.75rem;">user@example.com</div>
           </div>
-          <button class="btn btn-sm btn-link p-0 text-muted btn-logout" title="Sign Out">🚪</button>
+          <button class="btn btn-sm btn-link p-0 text-muted btn-logout" title="Sign Out">
+            <svg style="width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none;" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          </button>
         </div>
       </div>
     </aside>
 
-    <!-- Main Content -->
+    <!-- Main Content Area -->
     <main class="app-main">
       <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
-          <h2 class="fw-bold mb-1">AI Code Review Studio</h2>
-          <p class="text-muted small mb-0">Submit source code or import from GitHub to perform comprehensive static and AI analysis</p>
+          <h2 class="fw-bold mb-1">Code Review Studio</h2>
+          <p class="text-muted small mb-0">Submit source code for automated security audit, bug detection, and performance review</p>
         </div>
         <div class="d-flex gap-2">
-          <button type="button" class="btn btn-sm btn-olive-outline" id="sampleCodeBtn">⚡ Load Sample Code</button>
-          <button type="button" class="btn btn-sm btn-olive-outline" id="githubModalBtn">🐙 GitHub Import</button>
+          <button type="button" class="btn btn-subtle btn-sm" id="sampleCodeBtn">Load Sample Snippet</button>
+          <button type="button" class="btn btn-subtle btn-sm" id="githubModalBtn">Import from GitHub</button>
         </div>
       </div>
 
       <!-- Editor Card -->
-      <div class="card-clean mb-4 p-0" style="overflow: hidden;">
+      <div class="card-clean mb-4 p-0 overflow-hidden">
         <div class="editor-header d-flex justify-content-between align-items-center px-3 py-2">
           <div class="d-flex align-items-center gap-3">
-            <label for="languageSelect" class="small fw-bold text-muted mb-0">LANGUAGE:</label>
-            <select id="languageSelect" class="form-select form-select-sm" style="width: auto; min-width: 150px;">
-              <option value="Python" selected>Python</option>
-              <option value="JavaScript">JavaScript</option>
+            <label for="languageSelect" class="small fw-bold text-muted mb-0" style="font-size: 0.75rem; letter-spacing: 0.05em;">LANGUAGE</label>
+            <select id="languageSelect" class="form-select form-select-sm" style="width: auto; min-width: 140px;">
+              <option value="JavaScript" selected>JavaScript</option>
+              <option value="Python">Python</option>
               <option value="TypeScript">TypeScript</option>
               <option value="Java">Java</option>
               <option value="C">C</option>
@@ -116,23 +118,23 @@
             </select>
           </div>
 
-          <div class="small text-muted" id="editorStats">0 lines | 0 characters</div>
+          <div class="small text-muted font-monospace" id="editorStats" style="font-size: 0.78rem;">0 lines | 0 chars</div>
         </div>
 
         <div class="p-0">
           <textarea
             id="codeEditor"
             class="code-editor-textarea"
-            placeholder="// Paste or write your source code here...&#10;// Example:&#10;def query_user(user_id):&#10;    sql = 'SELECT * FROM users WHERE id = ' + user_id&#10;    cursor.execute(sql)&#10;    return cursor.fetchall()"
+            placeholder="// Paste or write source code here...&#10;function getUser(username) {&#10;    const query = &quot;SELECT * FROM users WHERE name = '&quot; + username + &quot;'&quot;;&#10;    console.log(query);&#10;    return query;&#10;}&#10;&#10;getUser(&quot;admin&quot;);"
             spellcheck="false"
           ></textarea>
         </div>
 
         <div class="p-3 bg-white border-top d-flex justify-content-between align-items-center">
-          <button type="button" class="btn btn-sm btn-outline-secondary" id="clearBtn">Clear Editor</button>
+          <button type="button" class="btn btn-sm btn-subtle" id="clearBtn">Clear Editor</button>
           <button type="button" class="btn-olive" id="submitReviewBtn">
-            <span>Review Code</span>
-            <span>→</span>
+            <span>Execute AI Review</span>
+            <span>&rarr;</span>
           </button>
         </div>
       </div>
@@ -140,28 +142,28 @@
       <!-- GitHub Import Modal -->
       <div class="modal fade" id="githubModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title fw-bold">Analyze Public GitHub File</h5>
+          <div class="modal-content border-0 shadow-sm" style="border: 1px solid var(--border-color) !important;">
+            <div class="modal-header py-3">
+              <h6 class="modal-title fw-bold">Analyze Public GitHub File</h6>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
               <p class="small text-muted mb-3">Fetch any public source file directly from GitHub without needing personal access tokens.</p>
               <div class="mb-3">
-                <label for="githubRepoUrl" class="form-label small fw-semibold">REPOSITORY URL</label>
-                <input type="url" class="form-control form-control-sm" id="githubRepoUrl" placeholder="https://github.com/pallets/flask">
+                <label for="githubRepoUrl" class="form-label small fw-bold text-muted text-uppercase" style="font-size: 0.72rem;">Repository URL</label>
+                <input type="url" class="form-control" id="githubRepoUrl" placeholder="https://github.com/expressjs/express">
               </div>
               <div class="mb-3">
-                <label for="githubFilePath" class="form-label small fw-semibold">FILE PATH IN REPO</label>
-                <input type="text" class="form-control form-control-sm" id="githubFilePath" placeholder="src/flask/app.py">
+                <label for="githubFilePath" class="form-label small fw-bold text-muted text-uppercase" style="font-size: 0.72rem;">File Path in Repository</label>
+                <input type="text" class="form-control" id="githubFilePath" placeholder="lib/router/index.js">
               </div>
-              <div class="mb-3">
-                <label for="githubBranch" class="form-label small fw-semibold">BRANCH (OPTIONAL)</label>
-                <input type="text" class="form-control form-control-sm" id="githubBranch" placeholder="main" value="main">
+              <div class="mb-2">
+                <label for="githubBranch" class="form-label small fw-bold text-muted text-uppercase" style="font-size: 0.72rem;">Branch (Optional)</label>
+                <input type="text" class="form-control" id="githubBranch" placeholder="master" value="master">
               </div>
             </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <div class="modal-footer py-2">
+              <button type="button" class="btn btn-sm btn-subtle" data-bs-dismiss="modal">Cancel</button>
               <button type="button" class="btn btn-sm btn-olive" id="fetchGithubBtn">Fetch & Review</button>
             </div>
           </div>
@@ -170,7 +172,6 @@
     </main>
   </div>
 
-  <!-- Bootstrap Bundle JS (includes Modal) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
