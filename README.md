@@ -4,7 +4,7 @@
 [![Flask Version](https://img.shields.io/badge/Flask-3.1.2-green.svg)](https://flask.palletsprojects.com/)
 [![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL%20%2F%20SQLAlchemy-blue.svg)](https://www.postgresql.org/)
 [![AI Engine](https://img.shields.io/badge/AI-Google%20Gemini%20API-orange.svg)](https://aistudio.google.com/)
-[![Tests](https://img.shields.io/badge/Tests-18%20Passed%20(Pytest)-brightgreen.svg)](https://docs.pytest.org/)
+[![Tests](https://img.shields.io/badge/Tests-24%20Passed%20(Pytest)-brightgreen.svg)](https://docs.pytest.org/)
 [![License](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 
 > **Repository Description:** AI-powered code review application built with Python Flask, PostgreSQL, JavaScript, and Gemini API.  
@@ -20,7 +20,7 @@ Built specifically for a **Graduate Engineer Trainee / Junior Software Engineer*
 - **Clean Architecture:** Separation of concerns between REST API routing, business services, and database persistence.
 - **Explainable Engineering:** Simple, standard technologies without unnecessary frameworks or over-engineering.
 - **Strict Visual Identity:** Elegant developer-focused interface adhering strictly to an **Olive (`#6B7A3A`), Light Olive (`#E8EDD8`), and White (`#FFFFFF`)** palette.
-- **Thorough Verification:** 18 automated Pytest test cases and an exportable Postman test collection with status assertion scripts.
+- **Thorough Verification:** 24 automated Pytest test cases and an exportable Postman test collection with status assertion scripts.
 
 ---
 
@@ -201,7 +201,12 @@ tests/test_ai_service.py::test_clean_json_response PASSED
 tests/test_ai_service.py::test_validate_and_normalize_review_valid PASSED
 tests/test_ai_service.py::test_validate_and_normalize_review_resilience PASSED
 tests/test_ai_service.py::test_static_analysis_detects_flaws PASSED
-tests/test_ai_service.py::test_build_review_prompt PASSED
+tests/test_ai_service.py::test_javascript_sql_injection_and_console_log PASSED
+tests/test_ai_service.py::test_build_review_prompt_security_checklist PASSED
+tests/test_ai_service.py::test_suggested_refactoring_practical_code PASSED
+tests/test_ai_service.py::test_sql_injection_severity_calibration PASSED
+tests/test_ai_service.py::test_command_injection_detection PASSED
+tests/test_ai_service.py::test_command_injection_variants PASSED
 tests/test_auth.py::test_register_success PASSED
 tests/test_auth.py::test_register_duplicate_email PASSED
 tests/test_auth.py::test_register_validation_errors PASSED
@@ -211,12 +216,13 @@ tests/test_auth.py::test_get_current_user_profile PASSED
 tests/test_reviews.py::test_create_review_unauthorized PASSED
 tests/test_reviews.py::test_create_review_empty_code PASSED
 tests/test_reviews.py::test_create_review_success PASSED
+tests/test_reviews.py::test_create_review_javascript_sql_injection_end_to_end PASSED
 tests/test_reviews.py::test_get_reviews_history PASSED
 tests/test_reviews.py::test_get_single_review_and_isolation PASSED
 tests/test_reviews.py::test_delete_review PASSED
 tests/test_reviews.py::test_dashboard_metrics PASSED
 
-============================= 18 passed in 1.82s ==============================
+============================= 24 passed in 8.71s ==============================
 ```
 
 ### B. Postman Collection
