@@ -21,7 +21,7 @@ const AppConfig = {
     }
 
     // Production default: Replace this with your deployed Render backend URL or configure via Settings page
-    return 'https://ai-code-review-backend.onrender.com';
+    return 'https://ai-code-review-v269.onrender.com';
   },
 
   setApiBaseUrl(url) {

@@ -1,5 +1,6 @@
 # AI Code Review
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-brightgreen.svg?style=for-the-badge&logo=render)](https://ai-code-review-v269.onrender.com)
 [![Python Version](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
 [![Flask Version](https://img.shields.io/badge/Flask-3.1.2-green.svg)](https://flask.palletsprojects.com/)
 [![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL%20%2F%20SQLAlchemy-blue.svg)](https://www.postgresql.org/)
@@ -7,6 +8,9 @@
 [![Tests](https://img.shields.io/badge/Tests-24%20Passed%20(Pytest)-brightgreen.svg)](https://docs.pytest.org/)
 [![License](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 
+> 🚀 **Live Production Application:** **[https://ai-code-review-v269.onrender.com](https://ai-code-review-v269.onrender.com)**  
+> *(Note: Hosted on Render Free Tier. If the instance is sleeping due to inactivity, please allow ~30–50 seconds for initial spin-up.)*  
+>  
 > **Repository Description:** AI-powered code review application built with Python Flask, PostgreSQL, JavaScript, and Gemini API.  
 > **Suggested GitHub Topics:** `python`, `flask`, `postgresql`, `sqlalchemy`, `javascript`, `html`, `css`, `bootstrap`, `gemini-api`, `ai`, `code-review`, `rest-api`, `postman`, `pytest`, `software-testing`
 
@@ -324,7 +328,8 @@ The application is engineered to deploy cleanly across decoupled free-tier cloud
    - `JWT_SECRET_KEY`: *(generate a random 32+ character string)*
    - `SECRET_KEY`: *(generate a random string)*
    - `FRONTEND_URL`: `*` (or your Vercel URL once deployed)
-6. Click **Deploy Web Service**. Once deployed, copy your Render URL (e.g. `https://ai-code-review-api.onrender.com`).
+6. Click **Deploy Web Service**.
+   - **Primary Live Deployment:** **[https://ai-code-review-v269.onrender.com](https://ai-code-review-v269.onrender.com)** (Serves both the Flask REST API and Frontend SPA).
 
 ### C. Deploy Frontend to Vercel
 1. Sign in to [Vercel](https://vercel.com/) and click **Add New > Project**.
